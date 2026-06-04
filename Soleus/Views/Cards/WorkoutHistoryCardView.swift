@@ -241,7 +241,7 @@ struct WorkoutHistoryCardView: View {
     
     private func calculateTotalTime(for detail: WorkoutDetail) -> Int {
         guard let sets = detail.sets?.allObjects as? [WorkoutSet] else {
-            AppLogger.ui.warning("No sets found for exercise \(detail.exerciseName ?? "Unknown Exercise")")
+            AppLogger.ui.warning("No sets found for exercise in history detail")
             return 0
         }
         

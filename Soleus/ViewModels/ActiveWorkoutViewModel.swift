@@ -110,7 +110,6 @@ class ActiveWorkoutViewModel: ObservableObject {
         workoutController.loadWorkoutDetails(for: workoutId)
         workoutCancelled = true
         HapticManager.shared.workoutCancelled()
-        AnalyticsManager.logWorkoutAbandoned()
         AppLogger.workout.info("Canceled workout with ID: \(self.workoutId)")
     }
 

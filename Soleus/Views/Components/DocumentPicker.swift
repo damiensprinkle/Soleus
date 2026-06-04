@@ -7,7 +7,10 @@ struct DocumentPicker: UIViewControllerRepresentable {
     @Binding var showImportPreview: Bool
 
     func makeUIViewController(context: Context) -> UIDocumentPickerViewController {
-        let contentTypes = UTType(filenameExtension: "soleus").map { [$0] } ?? [UTType.data]
+        var contentTypes: [UTType] = [.json]
+        if let soleusType = UTType(filenameExtension: "soleus") {
+            contentTypes.insert(soleusType, at: 0)
+        }
         let picker = UIDocumentPickerViewController(forOpeningContentTypes: contentTypes)
         picker.delegate = context.coordinator
         picker.allowsMultipleSelection = false

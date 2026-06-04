@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		081A94A82F7224C100896A3E /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 081A94A72F7224C100896A3E /* FirebaseAnalytics */; };
 		081A94AB2F7226A100896A3E /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 081A94AA2F7226A100896A3E /* FirebaseCrashlytics */; };
 		081DD5892EC511AB00B4074D /* ShareableWorkout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 081DD5882EC511AB00B4074D /* ShareableWorkout.swift */; };
 		081DD58B2EC511D000B4074D /* ImportWorkoutPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 081DD58A2EC511D000B4074D /* ImportWorkoutPreviewView.swift */; };
@@ -122,7 +121,6 @@
 		0CA50001300000000000EE01 /* ContactUsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CA50002300000000000EE01 /* ContactUsView.swift */; };
 		0CA60001300000000000FF01 /* ContactUsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CA60002300000000000FF01 /* ContactUsTests.swift */; };
 		A1000006300000000000AA01 /* HealthKitManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000005300000000000AA01 /* HealthKitManagerTests.swift */; };
-		A2000001300000000000AA01 /* AnalyticsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000002300000000000AA01 /* AnalyticsManager.swift */; };
 		A3000001300000000000AA01 /* WorkoutSummaryShareCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3000002300000000000AA01 /* WorkoutSummaryShareCard.swift */; };
 /* End PBXBuildFile section */
 
@@ -274,7 +272,6 @@
 		0CA50002300000000000EE01 /* ContactUsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactUsView.swift; sourceTree = "<group>"; };
 		0CA60002300000000000FF01 /* ContactUsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactUsTests.swift; sourceTree = "<group>"; };
 		A1000005300000000000AA01 /* HealthKitManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitManagerTests.swift; sourceTree = "<group>"; };
-		A2000002300000000000AA01 /* AnalyticsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsManager.swift; sourceTree = "<group>"; };
 		A3000002300000000000AA01 /* WorkoutSummaryShareCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutSummaryShareCard.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -300,7 +297,6 @@
 		08B78FE92B6DBA370002DA68 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
-				081A94A82F7224C100896A3E /* FirebaseAnalytics in Frameworks */,
 				081A94AB2F7226A100896A3E /* FirebaseCrashlytics in Frameworks */,
 			);
 		};
@@ -337,7 +333,6 @@
 			isa = PBXGroup;
 			children = (
 				08C5E0372F721DD100FC40DB /* HealthKitManager.swift */,
-				A2000002300000000000AA01 /* AnalyticsManager.swift */,
 				08C5E0012F6F117700FC40DB /* NotificationManager.swift */,
 				08A2EC112ED8BFAA00B60FF9 /* HapticManager.swift */,
 				08A2EC022ED4C30C00B60FF9 /* RestTimerManager.swift */,
@@ -669,7 +664,6 @@
 			);
 			name = Soleus;
 			packageProductDependencies = (
-				081A94A72F7224C100896A3E /* FirebaseAnalytics */,
 				081A94AA2F7226A100896A3E /* FirebaseCrashlytics */,
 			);
 			productName = FlexSprinkle;
@@ -802,6 +796,7 @@
 				"",
 				"",
 				"",
+				"",
 			);
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -830,7 +825,6 @@
 				088B577A2EC3A7030066CC17 /* ActiveWorkoutViewModel.swift in Sources */,
 				085466812CDFAD4700136FBC /* WorkoutDetail+CoreDataClass.swift in Sources */,
 				08C5E0382F721DD100FC40DB /* HealthKitManager.swift in Sources */,
-				A2000001300000000000AA01 /* AnalyticsManager.swift in Sources */,
 				085466822CDFAD4700136FBC /* TemporaryWorkoutDetail+CoreDataClass.swift in Sources */,
 				08C5E0022F6F117700FC40DB /* NotificationManager.swift in Sources */,
 				085466832CDFAD4700136FBC /* TemporaryWorkoutDetail+CoreDataProperties.swift in Sources */,
@@ -1096,7 +1090,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0.3;
+				MARKETING_VERSION = 1.0.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.damiensprinkle.Soleus;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
@@ -1143,7 +1137,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0.3;
+				MARKETING_VERSION = 1.0.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.damiensprinkle.Soleus;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
@@ -1298,11 +1292,6 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		081A94A72F7224C100896A3E /* FirebaseAnalytics */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 081A94A62F7224C100896A3E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseAnalytics;
-		};
 		081A94AA2F7226A100896A3E /* FirebaseCrashlytics */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 081A94A62F7224C100896A3E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;

@@ -26,7 +26,7 @@ struct AddExerciseDialog: View {
                         .font(.caption)
                         .foregroundColor(.orange)
                         .padding(.top, 1)
-                    Text("This exercise will be permanently saved to your workout plan. Even if you cancel your active workout")
+                    Text("This exercise will be permanently saved to your workout plan, even if you cancel the workout.")
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .fixedSize(horizontal: false, vertical: true)

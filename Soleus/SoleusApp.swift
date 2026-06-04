@@ -8,11 +8,16 @@
 import SwiftUI
 import CoreData
 import FirebaseCore
+import FirebaseCrashlytics
 
 class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
         FirebaseApp.configure()
+        // Respect the user's crash-reporting preference. Default is on; only
+        // disable if the user has explicitly opted out in Settings.
+        let crashReportingEnabled = UserDefaults.standard.object(forKey: "crashReportingEnabled") as? Bool ?? true
+        Crashlytics.crashlytics().setCrashlyticsCollectionEnabled(crashReportingEnabled)
         return true
     }
 }
@@ -37,6 +42,8 @@ struct SoleusApp: App {
 
         if isUITesting {
             UserDefaults.standard.set(true, forKey: "hasSeenLongPressTooltip")
+            UserDefaults.standard.set(true, forKey: "hasSeenSetToggleHint")
+            UserDefaults.standard.set(true, forKey: "hasSeenRestTimerHint")
             let currentVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
             UserDefaults.standard.set(currentVersion, forKey: "lastSeenVersion")
         }

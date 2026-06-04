@@ -558,7 +558,6 @@ class WorkoutManager: ObservableObject, WorkoutManaging {
                             try mainContext.save()
                         }
                         AppLogger.workout.info("Workout and its associated entities deleted successfully")
-                        AnalyticsManager.logWorkoutDeleted()
                     } catch {
                         AppLogger.coreData.error("Error saving main context: \(error.localizedDescription)")
                         self?.errorHandler?.handle(.deleteFailed(error))
@@ -984,8 +983,11 @@ extension WorkoutManager {
         guard let context = self.context else { return nil }
         // Calculate the start and end of the month for the provided date
         let calendar = Calendar.current
-        let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: calendar.startOfDay(for: date)))!
-        let endOfMonth = calendar.date(byAdding: DateComponents(month: 1, second: -1), to: startOfMonth)!
+        guard let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: calendar.startOfDay(for: date))),
+              let endOfMonth = calendar.date(byAdding: DateComponents(month: 1, second: -1), to: startOfMonth) else {
+            AppLogger.coreData.error("Failed to compute month bounds for date: \(date)")
+            return nil
+        }
 
         let fetchRequest: NSFetchRequest<WorkoutHistory> = WorkoutHistory.fetchRequest()
         // Create a predicate to filter workouts within the start and end of the month
@@ -1051,8 +1053,6 @@ extension WorkoutManager {
                     newSession.deviceIdentifier = UIDevice.current.identifierForVendor?.uuidString
                     workout.sessions = newSession
                     NotificationManager.scheduleActiveWorkoutReminder()
-                    let exerciseCount = (workout.details as? Set<WorkoutDetail>)?.count ?? 0
-                    AnalyticsManager.logWorkoutStarted(exerciseCount: exerciseCount)
                 } else {
                     if let existingSession = workout.sessions, existingSession.isActive {
                         existingSession.isActive = false

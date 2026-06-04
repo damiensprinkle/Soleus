@@ -55,10 +55,12 @@ class LogCapture: ObservableObject {
             persistEntry(entry)
         }
 
-        // Forward to Crashlytics as breadcrumbs and non-fatals
+        // Forward to Crashlytics as breadcrumbs and non-fatals.
+        // Strip user-entered content before it leaves the device.
+        let remoteMessage = Self.scrubUserContent(message)
         switch level {
         case .warning, .error, .critical:
-            Crashlytics.crashlytics().log("[\(category)] \(message)")
+            Crashlytics.crashlytics().log("[\(category)] \(remoteMessage)")
         default:
             break
         }
@@ -66,10 +68,26 @@ class LogCapture: ObservableObject {
             let err = NSError(
                 domain: "com.damiensprinkle.Soleus.\(category)",
                 code: 0,
-                userInfo: [NSLocalizedDescriptionKey: message]
+                userInfo: [NSLocalizedDescriptionKey: remoteMessage]
             )
             Crashlytics.crashlytics().record(error: err)
         }
+    }
+
+    // MARK: - Scrubbing
+
+    // Convention: log statements wrap user-entered values in single quotes
+    // (e.g. "Adding exercise '\(name)'"). This strips anything between single
+    // quotes before logs leave the device, so exercise names, workout titles,
+    // and notes never reach Crashlytics or the support-email attachment.
+    private static let userContentRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: "'[^']*'", options: [])
+    }()
+
+    static func scrubUserContent(_ message: String) -> String {
+        guard let regex = userContentRegex else { return message }
+        let range = NSRange(message.startIndex..., in: message)
+        return regex.stringByReplacingMatches(in: message, options: [], range: range, withTemplate: "'<redacted>'")
     }
 
     func debug(_ message: String, category: String = "General") {
@@ -104,8 +122,10 @@ class LogCapture: ObservableObject {
     private func persistEntry(_ entry: LogEntry) {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
-        // Escape backslashes then newlines so each entry stays on one line in the file
-        let safeMessage = entry.message
+        // Scrub user content before persisting — this file is attached to
+        // support emails, so it must not contain exercise names or notes.
+        // Escape backslashes then newlines so each entry stays on one line.
+        let safeMessage = Self.scrubUserContent(entry.message)
             .replacingOccurrences(of: "\\", with: "\\\\")
             .replacingOccurrences(of: "\n", with: "\\n")
         let line = "[\(formatter.string(from: entry.timestamp))] [\(entry.level.rawValue)] [\(entry.category)] \(safeMessage)\n"

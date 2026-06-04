@@ -9,66 +9,82 @@ struct PrivacyPolicyView: View {
                 VStack(alignment: .leading, spacing: 24) {
                     // Header
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Your Privacy Matters")
+                        Text("Your Privacy")
                             .font(.title)
                             .fontWeight(.bold)
 
-                        Text("Last updated: November 2025")
+                        Text("Last updated: June 2026")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
 
                     Divider()
 
-                    // No Data Collection
+                    // What Stays on Your Device
                     PrivacySection(
                         icon: "lock.shield.fill",
                         iconColor: .green,
-                        title: "No Data Collection",
-                        description: "Soleus doesn't collect, store, or transmit any of your personal information. All your workout data stays on your device."
+                        title: "Your Workouts Stay With You",
+                        description: "Workouts, exercises, sets, notes, history, and preferences live on your device. The developer never sees them."
                     )
 
-                    // No Tracking
+                    // iCloud Sync
+                    PrivacySection(
+                        icon: "icloud.fill",
+                        iconColor: .blue,
+                        title: "iCloud Sync",
+                        description: "If you're signed into iCloud, Soleus uses Apple's CloudKit to sync your workouts across your own devices. The data lives in your private iCloud account — we don't have access to it. You can disable sync any time in iOS Settings → Apple ID → iCloud → Soleus."
+                    )
+
+                    // Apple Health
+                    PrivacySection(
+                        icon: "heart.fill",
+                        iconColor: .red,
+                        title: "Apple Health",
+                        description: "With your permission, Soleus writes completed workouts to Apple Health so they appear in the Fitness app. You can revoke this any time in Settings. Nothing is read or written without your consent."
+                    )
+
+                    // Crash Reports
+                    PrivacySection(
+                        icon: "ladybug.fill",
+                        iconColor: .orange,
+                        title: "Crash Reports",
+                        description: "When the app crashes, an anonymous report is sent to Google Firebase Crashlytics so the developer can fix the bug. Reports include the crash itself plus diagnostic logs. Your workout names, exercise names, and notes are stripped from these logs before they leave your device. No location data, no identifiers beyond an anonymous install ID."
+                    )
+
+                    // No Analytics, No Ads, No Tracking
                     PrivacySection(
                         icon: "eye.slash.fill",
-                        iconColor: .blue,
-                        title: "No Tracking",
-                        description: "We don't track your activity, location, or behavior. Your workouts are private and belong to you alone."
-                    )
-
-                    // No Ads
-                    PrivacySection(
-                        icon: "rectangle.slash.fill",
-                        iconColor: .orange,
-                        title: "No Advertisements",
-                        description: "Soleus is completely ad-free. No third-party advertisers, no analytics services, no interruptions."
-                    )
-
-                    // Offline First
-                    PrivacySection(
-                        icon: "airplane",
                         iconColor: .purple,
-                        title: "Works Offline",
-                        description: "All features work completely offline. No internet connection required, no cloud services, no external servers."
+                        title: "No Analytics, No Ads, No Tracking",
+                        description: "Soleus does not include analytics SDKs, advertising networks, or behavioral tracking. The developer doesn't know what you do with the app — only that it crashed, if it ever does."
                     )
 
-                    // Your Data
+                    // Bug Reports
                     PrivacySection(
-                        icon: "externaldrive.fill",
+                        icon: "envelope.fill",
+                        iconColor: .secondary,
+                        title: "Bug Reports You Send",
+                        description: "When you tap Contact Us and file a bug report, you can attach a log file. User-entered content (workout names, exercise names, notes) is scrubbed from the attachment before it's added to the email. You can also review and edit the email before sending."
+                    )
+
+                    // Your Control
+                    PrivacySection(
+                        icon: "hand.raised.fill",
                         iconColor: .myBlue,
                         title: "Your Data, Your Control",
-                        description: "Your workout history, achievements, and settings are stored locally on your device. You have complete control over your data."
+                        description: "Delete the app to remove local data. Disable iCloud sync in iOS Settings to keep everything on a single device. Revoke Apple Health access in Settings any time. Your workouts are yours."
                     )
 
                     Divider()
 
                     // Footer
                     VStack(spacing: 12) {
-                        Text("Simple Privacy")
+                        Text("Simple, Honest, Transparent")
                             .font(.headline)
                             .foregroundColor(.primary)
 
-                        Text("We built Soleus to be a simple, private workout tracker. No accounts, no sign-ups, no cloud syncing. Just you and your workouts.")
+                        Text("No app account. No analytics. No ads. Crash reports only when something breaks — with your workout content stripped out first.")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)

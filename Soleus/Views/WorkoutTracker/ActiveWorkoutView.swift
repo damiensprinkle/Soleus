@@ -15,6 +15,8 @@ struct ActiveWorkoutView: View {
 
     @AppStorage("autoStartRestTimer") private var autoStartRestTimer: Bool = true
     @AppStorage("defaultRestDuration") private var defaultRestDuration: Int = 90
+    @AppStorage("hasSeenSetToggleHint") private var hasSeenSetToggleHint: Bool = false
+    @AppStorage("hasSeenRestTimerHint") private var hasSeenRestTimerHint: Bool = false
 
     // UI State only
     @State private var errorMessage: String = ""
@@ -66,6 +68,16 @@ struct ActiveWorkoutView: View {
                             .zIndex(1)
                     }
 
+                    if restTimer.isResting && !hasSeenRestTimerHint {
+                        firstTimeHint(
+                            icon: "timer",
+                            title: "Rest timer started",
+                            subtitle: "Tap Skip to end early, or ±30s to adjust"
+                        ) {
+                            hasSeenRestTimerHint = true
+                        }
+                    }
+
                     if editMode == .active {
                         HStack(alignment: .top, spacing: 8) {
                             Image(systemName: "info.circle")
@@ -85,6 +97,14 @@ struct ActiveWorkoutView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .background(Color(.secondarySystemGroupedBackground))
                         .transition(.opacity.combined(with: .move(edge: .top)))
+                    } else if viewModel.workoutStarted && !hasSeenSetToggleHint {
+                        firstTimeHint(
+                            icon: "checkmark.circle.fill",
+                            title: "Tap the green circle to mark a set complete",
+                            subtitle: "Sets auto-complete once required fields are filled"
+                        ) {
+                            hasSeenSetToggleHint = true
+                        }
                     }
 
                     ScrollViewReader { proxy in
@@ -749,6 +769,41 @@ struct ActiveWorkoutView: View {
         } else {
             return "Start Workout"
         }
+    }
+
+    @ViewBuilder
+    private func firstTimeHint(
+        icon: String,
+        title: String,
+        subtitle: String,
+        onDismiss: @escaping () -> Void
+    ) -> some View {
+        Button(action: {
+            withAnimation(.easeOut(duration: 0.25)) { onDismiss() }
+        }) {
+            HStack(spacing: 10) {
+                Image(systemName: icon)
+                    .font(.title3)
+                    .foregroundColor(.myBlue)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.primary)
+                    Text(subtitle)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                Spacer()
+                Image(systemName: "xmark")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            .padding(12)
+            .background(Color(.secondarySystemGroupedBackground))
+        }
+        .buttonStyle(.plain)
+        .transition(.opacity.combined(with: .move(edge: .top)))
     }
 }
 

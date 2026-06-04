@@ -47,7 +47,7 @@ struct AddWorkoutView: View {
                 HStack {
                     Button("Cancel") {
                         if hasUnsavedChanges {
-                            alertMessage = "You have unsaved changes are you sure you want to cancel?"
+                            alertMessage = "You have unsaved changes. Are you sure you want to cancel?"
                             activeAlert = .cancelConfirmation
                             showAlert = true
                         } else {
@@ -64,6 +64,12 @@ struct AddWorkoutView: View {
                     Spacer()
 
                     Button("Save") {
+                        if update, workoutController.activeWorkoutId == workoutId {
+                            errorMessage = "You cannot edit a workout that is in progress."
+                            activeAlert = .error
+                            showAlert = true
+                            return
+                        }
                         let result = workoutController.saveWorkout(title: workoutTitle, update: update, workoutId: workoutId)
                         switch result {
                         case .success:
