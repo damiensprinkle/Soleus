@@ -10,7 +10,7 @@
 - **Data Persistence**: CoreData (`NSPersistentCloudKitContainer`) with iCloud sync
 - **Architecture**: MVVM with a Manager layer
 - **Testing**: XCTest (unit tests) + XCUITest (UI tests)
-- **External Dependencies**: Firebase iOS SDK (FirebaseAnalytics, FirebaseCrashlytics)
+- **External Dependencies**: Firebase iOS SDK (FirebaseCrashlytics only — Analytics was removed for privacy reasons)
 
 ## Architecture
 
@@ -27,7 +27,7 @@
 ### Key Classes
 
 - **`WorkoutTrackerViewModel`** — Central view model for the workout tab. Owns `workoutDetails`, `workouts`, and session state. Passed as `@EnvironmentObject` throughout the workout flow.
-- **`WorkoutManager`** (~600 lines) — All CoreData reads/writes for workouts, history, sessions, and sets.
+- **`WorkoutManager`** (~1100 lines — split into smaller managers is planned for post-1.0) — All CoreData reads/writes for workouts, history, sessions, and sets.
 - **`AppViewModel`** — Manages custom state-based navigation. Owns `currentView: ContentViewType`.
 - **`AchievementManager`** — Evaluates and persists milestone achievements after each workout.
 - **`RestTimerManager`** — Countdown timer for between-set rest periods. Published as an environment object.
@@ -35,7 +35,7 @@
 - **`ColorManager`** — Randomly assigns colors to new workouts from the 15-color palette.
 - **`HapticManager`** — Centralized haptic feedback (set completion, reorder, etc.).
 - **`PersistenceController`** — CoreData stack singleton using `NSPersistentCloudKitContainer`. Shared static instance prevents duplicate `NSManagedObjectModel` registration in tests. The `forUITesting` path uses a plain `NSPersistentContainer` with an in-memory store so tests have no network dependency.
-- **`LogCapture`** — Retains last 500 in-memory log entries for in-app diagnostics and bug report attachments.
+- **`LogCapture`** — Retains last 500 in-memory log entries for in-app diagnostics and bug report attachments. Strips user-entered content (wrapped in single quotes) from anything forwarded to Crashlytics or persisted to the support-email attachment.
 
 ### Navigation System
 
@@ -76,6 +76,8 @@ AppLogger.validation.warning("...")
 
 Use `AppLogger` (not `print()`) throughout production code. `LogCapture.shared` taps into the OSLog stream and retains the last 500 entries in memory for the in-app log viewer and bug report attachments.
 
+**PII scrubbing convention**: wrap any user-entered content (exercise names, workout titles, notes) in single quotes when interpolating into log messages — e.g., `AppLogger.workout.warning("Failed for '\(name)'")`. `LogCapture.scrubUserContent(_:)` strips anything between single quotes before logs leave the device (Crashlytics + persisted error file). The in-memory `logs` array stays unscrubbed for local debuggability.
+
 ### Input Validation
 
 - Max length constraints enforced with live counters in the UI (30 chars for titles and exercise names)
@@ -92,9 +94,24 @@ All interactive elements used in UI tests carry `.accessibilityIdentifier(Access
 
 | Package | Products Used | Purpose |
 |---|---|---|
-| [firebase-ios-sdk](https://github.com/firebase/firebase-ios-sdk) | FirebaseAnalytics, FirebaseCrashlytics | Analytics events and crash reporting |
+| [firebase-ios-sdk](https://github.com/firebase/firebase-ios-sdk) | FirebaseCrashlytics | Crash reporting |
 
-The Firebase SDK pulls in ~12 transitive dependencies (gRPC, abseil, leveldb, etc.) at the SPM resolution level. Only the Analytics and Crashlytics products are linked into the app binary — Firestore-related packages are resolved but not included.
+The Firebase SDK pulls in transitive dependencies at the SPM resolution level. Only the Crashlytics product is linked into the app binary — Analytics, Firestore, and ad-related packages are resolved but not included.
+
+Crash reporting is **opt-out** via Settings → Privacy → Crash Reports. The toggle persists to `UserDefaults` (`crashReportingEnabled`, defaults to `true`) and is applied at launch in `AppDelegate.didFinishLaunchingWithOptions` via `Crashlytics.crashlytics().setCrashlyticsCollectionEnabled(...)`. Toggling at runtime takes effect immediately — when disabled, breadcrumbs, non-fatals, and queued crash reports are all dropped.
+
+## Privacy & App Store Compliance
+
+The app's data-collection story is described in four places that must stay in sync — modifying one requires updating the others:
+
+| Surface | Path |
+|---|---|
+| Privacy manifest | `Soleus/PrivacyInfo.xcprivacy` — declares Crash Data, Performance Data, Other Diagnostic Data (all linked, no tracking) plus three required-reason API entries |
+| App Store Connect | "App Privacy" questionnaire — must mirror the manifest |
+| User-facing policy | `Soleus/Views/Main/PrivacyPolicyView.swift` — plain-English summary of what's collected and what isn't |
+| App config | `Soleus/Info.plist` — includes `ITSAppUsesNonExemptEncryption=false` and `LSApplicationCategoryType=public.app-category.healthcare-fitness` |
+
+Adding any SDK that collects data, reintroducing Firebase Analytics, or starting to log new categories of user content requires updating all four surfaces simultaneously.
 
 ## Project Structure
 
@@ -118,15 +135,14 @@ Soleus/
 │   ├── Cards/                # CardView, WorkoutHistoryCardView, DataCardView
 │   └── Components/           # Shared UI: DocumentPicker, MailComposer, DatePickerView, etc.
 ├── Managers/
-│   ├── WorkoutManager.swift  # All CoreData workout operations (~600 lines)
+│   ├── WorkoutManager.swift  # All CoreData workout operations (~1100 lines)
 │   ├── AchievementManager.swift
 │   ├── RestTimerManager.swift
 │   ├── FocusManager.swift
 │   ├── ColorManager.swift
 │   ├── HapticManager.swift
 │   ├── HealthKitManager.swift
-│   ├── NotificationManager.swift
-│   └── AnalyticsManager.swift
+│   └── NotificationManager.swift
 ├── Controllers/
 │   └── PersistenceController.swift   # CloudKit-backed CoreData stack
 ├── Protocols/

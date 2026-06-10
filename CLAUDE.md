@@ -25,7 +25,7 @@ xcodebuild clean -scheme Soleus
 
 The app follows MVVM architecture with an additional Manager layer:
 - **Views**: Pure SwiftUI views, no UIKit (except UIViewControllerRepresentable wrappers)
-- **Controllers**: `WorkoutTrackerController` bridges Managers and Views, manages UI state
+- **ViewModels**: `WorkoutTrackerViewModel` bridges Managers and Views, owns UI state via `@Published` properties (the `controller` variable name in `SoleusApp` is historical — the type is a ViewModel)
 - **Managers**: `WorkoutManager` (~1100 lines — split is desirable post-launch but not in flight), `ColorManager`, `FocusManager`, `RestTimerManager`, `AchievementManager`
 - **Models**: CoreData entities + lightweight transfer objects
 
@@ -104,7 +104,7 @@ Environment objects injected from `SoleusApp`:
 @StateObject private var persistenceController = PersistenceController.shared
 @StateObject private var appViewModel = AppViewModel()
 @StateObject private var workoutManager = WorkoutManager()
-@StateObject private var controller = WorkoutTrackerController(workoutManager: workoutManager)
+@StateObject private var controller = WorkoutTrackerViewModel(workoutManager: workoutManager)
 
 // Views receive these via .environmentObject()
 ```
@@ -142,7 +142,7 @@ CoreData context is injected separately:
 
 ### Workout Template Management
 
-**WorkoutTrackerController State**:
+**WorkoutTrackerViewModel State**:
 - `workoutDetails`: Editable in-memory state (array of `WorkoutDetailInput`)
 - `originalWorkoutDetails`: Immutable copy for change detection
 - Dirty checking on save determines if confirmation dialog needed

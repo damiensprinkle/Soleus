@@ -26,8 +26,10 @@
   - Duplicate workouts to create variations
   - Reorder workout cards on the main screen via long-press drag — drag near the top or bottom edge and the list auto-scrolls
   - Color-code workout cards — 15 color options available via the Customize Card menu
-  - Import workouts from `.soleus` files shared by other users
+  - Active workouts cannot be edited, deleted, or have their card customized — all three guards enforce this consistently
+  - Import workouts from native `.soleus` files (shared by other users) or generic `.json` files (created in any external tool)
   - Export and share workouts as `.soleus` files via AirDrop, Messages, or any share target
+  - In-app **JSON Format Reference** (Settings → Utilities) documents the import schema for users building JSON externally
 
 ## Active Workout Tracking
 
@@ -36,8 +38,9 @@
   - Single active session enforced — starting a new workout while one is active is blocked
   - Session persists through app backgrounding, force quit, and device restart
   - Resume banner appears on the main screen when a session is in progress
-  - Active workout card shows a pulsing ripple animation and a LIVE badge for at-a-glance identification
+  - Active workout card shows a pulsing ripple animation and an "Active" badge for at-a-glance identification
   - Notes icon is disabled and dimmed until the workout has been started
+  - First-time hints walk new users through the green completion toggle and the rest timer (each shown once, individually resettable from the developer menu)
 
 - **Set Tracking**:
   - Toggle completion of individual sets with a checkmark
@@ -118,8 +121,10 @@
 ## Sharing & Community
 
 - **Workout Import/Export**:
-  - Export any workout as a `.soleus` file
-  - Import `.soleus` files from other users via the document picker or share sheet
+  - Export any workout as a `.soleus` file (zlib-compressed binary, contains a 4-byte magic header so messaging apps render it as a tappable file rather than inline text)
+  - Import `.soleus` files from other users via the document picker, share sheet, or `soleus://` deep link
+  - Import generic `.json` files from external tools — fields that don't apply default to sensible values
+  - 5 MB import size cap and per-field length limits protect against malformed or hostile payloads
   - Duplicate workout names on import are auto-resolved with a `-copy` suffix
   - Import preview screen shows all exercises before confirming
 
@@ -134,11 +139,15 @@
 
 - **FAQ**: In-app answers to common questions
 
-- **Privacy Policy**: Accessible within the app
+- **Privacy Policy**: Accessible within the app — discloses iCloud sync, Apple Health integration, Crashlytics crash reporting, and the absence of analytics, ads, and behavioral tracking
+
+- **Privacy Controls**:
+  - **Crash Reports** toggle (Settings → Privacy) — on by default, can be disabled at any time, takes effect immediately
+  - User-entered content (workout names, exercise names, notes) is automatically scrubbed from any logs before they reach Crashlytics or get attached to a support email
 
 - **Diagnostics**:
   - In-app log viewer (5-tap secret trigger in the About section of Settings)
-  - Logs contain only in-app events — no personal data
+  - Logs contain only in-app events — user content is scrubbed before persistence and remote upload
   - Optional log attachment on bug reports
 
 ## User Interface
