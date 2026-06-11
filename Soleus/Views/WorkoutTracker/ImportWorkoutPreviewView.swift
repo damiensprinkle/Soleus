@@ -13,7 +13,7 @@ struct ImportWorkoutPreviewView: View {
     init(shareableWorkout: ShareableWorkout, isPresented: Binding<Bool>) {
         self.shareableWorkout = shareableWorkout
         self._isPresented = isPresented
-        self._workoutName = State(initialValue: shareableWorkout.workoutName)
+        self._workoutName = State(initialValue: shareableWorkout.sanitizedWorkoutName)
     }
 
     var body: some View {

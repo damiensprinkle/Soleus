@@ -55,9 +55,23 @@ Or use Xcode's test runner (Cmd + U)
 
 **Import / Export**
 - [ ] Long-press a card and select "Share Workout" — verify .soleus file is generated
-- [ ] Import the file via the import button — verify import preview shows all exercises
+- [ ] Import the file via Settings → Utilities → Import Workout — verify preview shows all exercises
 - [ ] Confirm import and verify workout appears in library
 - [ ] Import a workout with a duplicate name — verify "-copy" suffix is added
+- [ ] Tap a `.soleus` file from Files or Mail — verify import preview opens automatically
+- [ ] Tap a `soleus://import?data=...` link from Messages — verify import preview opens
+
+**Generic JSON Import**
+- [ ] Settings → Utilities → JSON Format Reference — verify example JSON and field reference display correctly
+- [ ] Tap Copy on the example — verify the JSON is copied to clipboard
+- [ ] Save the copied JSON as a `.json` file in Files, then import it — verify it loads correctly
+- [ ] Import a minimal JSON (just `name` and one `exercises[].name`) — verify defaults are applied (Reps + Weight, 3 empty sets)
+- [ ] Import a JSON with `quantifier: "Distance"` and `measurement: "Time"` — verify cardio exercise is created correctly
+- [ ] Import an oversized file (>5 MB) — verify import is rejected silently with no crash
+- [ ] Import a JSON with a 100+ character exercise name — verify name is clamped to 30 characters
+
+**Active Workout Protection**
+- [ ] Start a workout, then long-press the active workout's card — verify Edit, Delete, and Customize all show "in progress" alerts instead of acting
 
 **Validation**
 - [ ] Try to save workout with empty title (should show error)
@@ -164,6 +178,17 @@ Or use Xcode's test runner (Cmd + U)
 - [ ] Verify the notes icon is dimmed and does not respond to taps
 - [ ] Tap "Start Workout" and verify the notes icon becomes active and tappable
 
+### 4a. Active Workout — First-Time Hints
+
+(Requires resetting hints via Dev Menu first: Reset Active Workout Hints)
+
+- [ ] Start a workout for the first time after reset — verify "Tap the green circle to mark a set complete" banner appears
+- [ ] Tap the X on the banner — verify it dismisses
+- [ ] Background the app and reopen — verify the dismissed banner does not reappear
+- [ ] Reset hints again and start a workout — complete a set so the rest timer kicks in — verify "Rest timer started" banner appears
+- [ ] Verify the rest timer banner is dismissed by tapping the X
+- [ ] Dev Menu → Reset Active Workout Hints — verify both banners reappear on next active workout
+
 ### 5. Achievements & Dashboard
 
 **Achievement Tracking**
@@ -192,6 +217,16 @@ Or use Xcode's test runner (Cmd + U)
 - [ ] Verify all screens render correctly in dark mode
 - [ ] Check that StaticWhite color remains white in dark mode
 - [ ] Verify text contrast is sufficient
+
+**Privacy Settings**
+- [ ] Settings → Privacy → Crash Reports toggle is on by default for fresh installs
+- [ ] Toggle off, force quit, reopen — verify the setting persists
+- [ ] Toggle off, induce a non-fatal error (e.g., via Dev Menu if available, or trigger an import of malformed data) — verify nothing appears in Crashlytics for that session
+- [ ] Toggle back on — verify subsequent errors are reported
+
+**Privacy Policy view**
+- [ ] Settings → Privacy Policy — verify the policy renders all seven sections (workouts stay with you, iCloud Sync, Apple Health, Crash Reports, No Analytics, Bug Reports, Your Control)
+- [ ] Verify the "Last updated" date is current
 
 ### 7. Keyboard & Focus Behavior
 

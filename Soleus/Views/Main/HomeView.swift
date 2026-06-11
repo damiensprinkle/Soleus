@@ -45,12 +45,16 @@ struct HomeView: View {
                     }
                 }
             } else {
-                VStack(spacing: 20) {
+                VStack(spacing: 16) {
+                    Text("Soleus")
+                        .font(.system(size: 44, weight: .bold, design: .rounded))
+                        .foregroundColor(.myBlue)
+                    Text("Warming up…")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
                     ProgressView()
-                        .scaleEffect(1.5)
-                    Text("Loading...")
-                        .font(.title3)
-                        .foregroundColor(.gray)
+                        .scaleEffect(1.2)
+                        .padding(.top, 4)
                 }
             }
         }

@@ -229,7 +229,12 @@ struct CardView: View {
         }
 
         Button(action: {
-            appViewModel.navigateTo(.customizeCardView(workoutId))
+            if workoutController.activeWorkoutId == workoutId {
+                alertTitle = "You Cannot Customize a Workout That Is In Progress"
+                showAlert = true
+            } else {
+                appViewModel.navigateTo(.customizeCardView(workoutId))
+            }
         }) {
             Label("Customize Card", systemImage: "paintpalette")
         }

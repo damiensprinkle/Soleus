@@ -105,14 +105,23 @@
 
 ## Importing a Workout
 
-**From the import button:**
-1. Tap the **import button** (down-arrow icon) in the Workout tab navigation bar
-2. Navigate to the `.soleus` file in the file picker
-3. Review the exercises on the import preview screen
+Soleus accepts two file formats:
+- **`.soleus`** — the native format produced by exporting a workout from this app
+- **`.json`** — a plain JSON file produced by any external tool (see Settings → Utilities → JSON Format Reference for the schema)
+
+**From Settings:**
+1. Open **Settings → Utilities → Import Workout**
+2. Pick either a `.soleus` or `.json` file from the file picker
+3. Review the workout name and exercises on the import preview screen — edit the name if needed
 4. Tap **Import** to add the workout to your library
 
-**From a share sheet or AirDrop:**
+**From a share sheet, AirDrop, or Messages link:**
 - Tapping a `.soleus` file from Messages, Mail, AirDrop, or Files will open Soleus and trigger the import preview automatically
+- Tapping a `soleus://import?data=...` link sent over iMessage opens the import preview directly
+
+**Notes:**
+- The import preview always shows your name field as editable — if the imported name is long, it's trimmed to 30 characters for display
+- Duplicate workout names are auto-resolved with a `-copy` suffix
 
 ---
 
@@ -153,6 +162,7 @@ Navigate to the **Settings** tab (gear icon) to configure:
 | Appearance | Light / Dark / System |
 | Auto-start rest timer | On / Off |
 | Default rest duration | Configurable in seconds |
+| Crash Reports | On / Off (on by default — sends anonymous crash data to help fix bugs; user content is stripped before sending) |
 
 ---
 

@@ -7,6 +7,10 @@ import Foundation
 struct ShareableWorkout: Codable, Equatable {
     // Magic bytes that prefix every exported .soleus file
     private static let magic: [UInt8] = [0x53, 0x4C, 0x53, 0x45] // "SLSE"
+    // Hard cap on raw import payload size. Legitimate workouts are well under 100 KB
+    // even before compression; 5 MB leaves plenty of headroom while bounding the
+    // attack surface for zip-bomb-style inputs.
+    static let maxImportSize = 5 * 1024 * 1024
     var version: String = "1.0"
     let workoutName: String
     let workoutColor: String?
@@ -81,9 +85,14 @@ struct ShareableWorkout: Codable, Equatable {
         return result
     }
 
-    /// Import workout from .soleus file data.
-    /// Handles compressed (current), uncompressed, and legacy raw-JSON formats.
+    /// Import workout from .soleus or generic .json file data.
+    /// Handles compressed (current), uncompressed, legacy raw-JSON, and generic JSON formats.
     static func `import`(from data: Data) -> ShareableWorkout? {
+        guard data.count <= maxImportSize else {
+            AppLogger.lifecycle.warning("Rejected import: \(data.count) bytes exceeds \(maxImportSize) limit")
+            return nil
+        }
+
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
 
@@ -97,14 +106,93 @@ struct ShareableWorkout: Codable, Equatable {
                 jsonData = Data(payload)
             }
         } else {
-            // Legacy: raw JSON without magic header
+            // Legacy or generic: raw JSON without magic header
             jsonData = data
         }
 
-        return try? decoder.decode(ShareableWorkout.self, from: jsonData)
+        if let native = try? decoder.decode(ShareableWorkout.self, from: jsonData) {
+            return native
+        }
+
+        // Fall back to the generic JSON format for imports from external sources.
+        return (try? decoder.decode(GenericWorkoutJSON.self, from: jsonData))?.toShareableWorkout()
     }
 
-    /// Convert to WorkoutDetailInput array for saving
+    // MARK: - Generic JSON import
+
+    /// Flexible JSON format for importing workouts from external sources.
+    ///
+    /// Minimal required structure:
+    /// ```json
+    /// {
+    ///   "name": "Push Day",
+    ///   "exercises": [
+    ///     {
+    ///       "name": "Bench Press",
+    ///       "sets": [{ "reps": 10, "weight": 135.0 }]
+    ///     }
+    ///   ]
+    /// }
+    /// ```
+    /// `quantifier` ("Reps"/"Distance") and `measurement` ("Weight"/"Time") default to
+    /// "Reps" and "Weight" when omitted. `sets` defaults to three empty sets.
+    /// Set fields (`reps`, `weight`, `time`, `distance`) each default to 0.
+    private struct GenericWorkoutJSON: Decodable {
+        let name: String
+        let exercises: [GenericExercise]
+
+        struct GenericExercise: Decodable {
+            let name: String
+            let quantifier: String?
+            let measurement: String?
+            let notes: String?
+            let sets: [GenericSet]?
+
+            struct GenericSet: Decodable {
+                let reps: Int32?
+                let weight: Float?
+                let time: Int32?
+                let distance: Float?
+            }
+        }
+
+        func toShareableWorkout() -> ShareableWorkout {
+            let shareableExercises = exercises.enumerated().map { index, ex in
+                let sets: [ShareableSet]
+                if let genericSets = ex.sets, !genericSets.isEmpty {
+                    sets = genericSets.enumerated().map { setIndex, s in
+                        ShareableSet(
+                            setIndex: Int32(setIndex),
+                            reps: s.reps ?? 0,
+                            weight: s.weight ?? 0,
+                            time: s.time ?? 0,
+                            distance: s.distance ?? 0
+                        )
+                    }
+                } else {
+                    sets = (0..<3).map { ShareableSet(setIndex: Int32($0), reps: 0, weight: 0, time: 0, distance: 0) }
+                }
+                return ShareableExercise(
+                    name: ex.name,
+                    orderIndex: Int32(index),
+                    quantifier: ex.quantifier ?? "Reps",
+                    measurement: ex.measurement ?? "Weight",
+                    sets: sets,
+                    notes: ex.notes
+                )
+            }
+            return ShareableWorkout(
+                workoutName: name,
+                workoutColor: nil,
+                exercises: shareableExercises,
+                exportDate: Date()
+            )
+        }
+    }
+
+    /// Convert to WorkoutDetailInput array for saving.
+    /// Per-field caps are enforced here so imports from external sources can't
+    /// produce strings longer than the in-app UI is designed to handle.
     func toWorkoutDetails() -> [WorkoutDetailInput] {
         return exercises.map { exercise in
             let setInputs = exercise.sets.map { set in
@@ -120,12 +208,30 @@ struct ShareableWorkout: Codable, Equatable {
             return WorkoutDetailInput(
                 id: UUID(), // Generate new ID for imported workout
                 exerciseId: UUID(), // Generate new exercise ID
-                exerciseName: exercise.name,
-                notes: exercise.notes, orderIndex: exercise.orderIndex,
+                exerciseName: Self.clamp(exercise.name, to: Self.maxNameLength),
+                notes: exercise.notes.map { Self.clamp($0, to: Self.maxNotesLength) },
+                orderIndex: exercise.orderIndex,
                 sets: setInputs,
                 exerciseQuantifier: exercise.quantifier,
                 exerciseMeasurement: exercise.measurement
             )
         }
+    }
+
+    /// Workout name clamped to the same length the in-app editor enforces.
+    /// `ImportWorkoutPreviewView` lets the user edit before saving, but the
+    /// preview UI also benefits from being handed a sane upper bound.
+    var sanitizedWorkoutName: String {
+        Self.clamp(workoutName, to: Self.maxNameLength)
+    }
+
+    // Matches the 30-char limit enforced by AddWorkoutView/AddExerciseDialog.
+    static let maxNameLength = 30
+    // Generous cap for exercise notes — enough for form cues, not enough to
+    // wedge a list view rendering a multi-MB string.
+    static let maxNotesLength = 500
+
+    private static func clamp(_ value: String, to maxLength: Int) -> String {
+        value.count <= maxLength ? value : String(value.prefix(maxLength))
     }
 }

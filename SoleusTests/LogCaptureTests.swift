@@ -150,6 +150,37 @@ final class LogCaptureTests: XCTestCase {
         XCTAssertEqual(formatted.filter { $0 == "." }.count, 1)
     }
 
+    // MARK: - Scrubbing
+
+    func testScrub_RedactsSingleQuotedContent() {
+        let scrubbed = LogCapture.scrubUserContent("Adding exercise 'Bench Press' at index 0")
+        XCTAssertEqual(scrubbed, "Adding exercise '<redacted>' at index 0")
+    }
+
+    func testScrub_RedactsMultipleQuotedSegments() {
+        let scrubbed = LogCapture.scrubUserContent("Workout '<redacted>' note '<redacted>' saved")
+        // Already-redacted text is idempotent
+        XCTAssertEqual(scrubbed, "Workout '<redacted>' note '<redacted>' saved")
+
+        let original = LogCapture.scrubUserContent("Workout 'Push Day' note 'PR attempt' saved")
+        XCTAssertEqual(original, "Workout '<redacted>' note '<redacted>' saved")
+    }
+
+    func testScrub_PreservesMessagesWithoutQuotes() {
+        let scrubbed = LogCapture.scrubUserContent("Failed to save: NSCocoaErrorDomain 134000")
+        XCTAssertEqual(scrubbed, "Failed to save: NSCocoaErrorDomain 134000")
+    }
+
+    func testScrub_PreservesUUIDsAndNumbers() {
+        let scrubbed = LogCapture.scrubUserContent("No workout found with ID: \(UUID().uuidString)")
+        XCTAssertFalse(scrubbed.contains("<redacted>"))
+    }
+
+    func testScrub_HandlesEmptyQuotedSegment() {
+        let scrubbed = LogCapture.scrubUserContent("Empty name '' rejected")
+        XCTAssertEqual(scrubbed, "Empty name '<redacted>' rejected")
+    }
+
     // MARK: - LogLevel rawValues
 
     func testLogLevel_RawValues() {

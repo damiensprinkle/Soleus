@@ -1,5 +1,6 @@
 import SwiftUI
 import CoreData
+import FirebaseCrashlytics
 
 struct SettingsView: View {
     @AppStorage("weightPreference") private var weightPreference: String = "lbs"
@@ -7,6 +8,7 @@ struct SettingsView: View {
     @AppStorage("defaultRestDuration") private var defaultRestDuration: Int = 60
     @AppStorage("autoStartRestTimer") private var autoStartRestTimer: Bool = true
     @AppStorage("appearancePreference") private var appearancePreference: String = "system"
+    @AppStorage("crashReportingEnabled") private var crashReportingEnabled: Bool = true
 
     @State private var showingPrivacyPolicy = false
     @State private var showingFAQ = false
@@ -33,7 +35,7 @@ struct SettingsView: View {
         Form {
             Section(
                 header: Text("Utilities"),
-                footer: Text("Import a .soleus file shared by another user or exported from this device. To import a workout from IMessage simply tap the link that was shared with you.")
+                footer: Text("Import a .soleus file shared from another device, or a plain .json file from any source. For iMessage sharing, tap the link sent to you. Need more help? See Help & FAQ below.")
             ) {
                 Button(action: {
                     importedWorkout = nil
@@ -94,6 +96,17 @@ struct SettingsView: View {
                         }
                     }
                 }
+            }
+
+            Section(
+                header: Text("Privacy"),
+                footer: Text("Anonymous crash reports help fix bugs. Your workout names and notes are stripped from any data before it leaves your device.")
+            ) {
+                Toggle("Crash Reports", isOn: $crashReportingEnabled)
+                    .tint(.green)
+                    .onChange(of: crashReportingEnabled) { _, newValue in
+                        Crashlytics.crashlytics().setCrashlyticsCollectionEnabled(newValue)
+                    }
             }
 
             Section(header: Text("About")) {

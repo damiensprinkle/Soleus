@@ -8,6 +8,7 @@ struct AddWorkoutView: View {
     @EnvironmentObject var workoutController: WorkoutTrackerViewModel
     @StateObject private var focusManager = FocusManager()
     
+    @State private var swipeResetToken: Int = 0
     @State private var workoutTitle: String = ""
     @State private var showingRenameDialog = false
     @State private var errorMessage: String = ""
@@ -46,7 +47,7 @@ struct AddWorkoutView: View {
                 HStack {
                     Button("Cancel") {
                         if hasUnsavedChanges {
-                            alertMessage = "You have unsaved changes are you sure you want to cancel?"
+                            alertMessage = "You have unsaved changes. Are you sure you want to cancel?"
                             activeAlert = .cancelConfirmation
                             showAlert = true
                         } else {
@@ -63,6 +64,12 @@ struct AddWorkoutView: View {
                     Spacer()
 
                     Button("Save") {
+                        if update, workoutController.activeWorkoutId == workoutId {
+                            errorMessage = "You cannot edit a workout that is in progress."
+                            activeAlert = .error
+                            showAlert = true
+                            return
+                        }
                         let result = workoutController.saveWorkout(title: workoutTitle, update: update, workoutId: workoutId)
                         switch result {
                         case .success:
@@ -309,7 +316,8 @@ struct AddWorkoutView: View {
                             },
                             addSetAction: {
                                 workoutController.addSet(for: index)
-                            }
+                            },
+                            swipeResetToken: swipeResetToken
                         )
                         .id("exercise_\(index)")
                         .padding(.horizontal, 20)
@@ -319,6 +327,9 @@ struct AddWorkoutView: View {
                 .padding(.vertical, 8)
             }
             .scrollDismissesKeyboard(.immediately)
+            .onScrollGeometryChange(for: Int.self) { Int($0.contentOffset.y / 10) } action: { _, _ in
+                swipeResetToken += 1
+            }
             .safeAreaInset(edge: .bottom) {
                 if !focusManager.isAnyTextFieldFocused {
                     bottomButtons
@@ -354,6 +365,7 @@ struct AddWorkoutView: View {
         var onRename: ((String) -> Void)?
         var onNotesChange: ((String?) -> Void)?
         var addSetAction: (() -> Void)?
+        var swipeResetToken: Int = 0
 
         @State private var isRenaming = false
         @State private var editingName = ""
@@ -499,24 +511,28 @@ struct AddWorkoutView: View {
                     }
 
                     ForEach(Array(sets.enumerated()), id: \.element.id) { setIndex, set in
-                        VStack(spacing: 0) {
-                            ExerciseRow(
-                                setIndex: setIndex + 1,
-                                setInput: Binding(
-                                    get: { setIndex < sets.count ? sets[setIndex] : set },
-                                    set: { if setIndex < sets.count { sets[setIndex] = $0 } }
-                                ),
-                                exerciseIndex: index,
-                                exerciseQuantifier: exerciseQuantifier,
-                                exerciseMeasurement: exerciseMeasurement
-                            )
-                            .environmentObject(focusManager)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 8)
+                        SwipeToDeleteRow(onDelete: {
+                            sets.remove(at: setIndex)
+                        }, resetToken: swipeResetToken) {
+                            VStack(spacing: 0) {
+                                ExerciseRow(
+                                    setIndex: setIndex + 1,
+                                    setInput: Binding(
+                                        get: { setIndex < sets.count ? sets[setIndex] : set },
+                                        set: { if setIndex < sets.count { sets[setIndex] = $0 } }
+                                    ),
+                                    exerciseIndex: index,
+                                    exerciseQuantifier: exerciseQuantifier,
+                                    exerciseMeasurement: exerciseMeasurement
+                                )
+                                .environmentObject(focusManager)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
 
-                            if setIndex < sets.count - 1 {
-                                Divider()
-                                    .padding(.horizontal, 16)
+                                if setIndex < sets.count - 1 {
+                                    Divider()
+                                        .padding(.horizontal, 16)
+                                }
                             }
                         }
                     }
@@ -616,6 +632,73 @@ struct AddWorkoutView: View {
         }
         activeAlert = .error
         showAlert = true
+    }
+}
+
+/// Wraps any row content with a trailing swipe-to-delete action.
+/// Left swipe reveals a red Delete button. Resets when `resetToken` changes (e.g. on scroll).
+private struct SwipeToDeleteRow<Content: View>: View {
+    let onDelete: () -> Void
+    let resetToken: Int
+    @ViewBuilder let content: () -> Content
+
+    @State private var offset: CGFloat = 0
+    private let deleteWidth: CGFloat = 70
+
+    var body: some View {
+        ZStack(alignment: .trailing) {
+            // Revealed delete button
+            Button(action: {
+                // Slide row fully off-screen, then collapse its height with animation
+                withAnimation(.easeIn(duration: 0.2)) {
+                    offset = -UIScreen.main.bounds.width
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        onDelete()
+                    }
+                }
+            }) {
+                Image(systemName: "trash.fill")
+                    .font(.body)
+                    .foregroundColor(.white)
+                    .frame(width: deleteWidth)
+                    .frame(maxHeight: .infinity)
+                    .background(Color.red)
+                    .cornerRadius(8)
+            }
+            .padding(.trailing, 2)
+            .opacity(offset < -10 ? 1 : 0)
+
+            // Row content slides left to reveal the button
+            content()
+                .background(Color(.secondarySystemGroupedBackground))
+                .offset(x: offset)
+                .gesture(
+                    DragGesture(minimumDistance: 15, coordinateSpace: .local)
+                        .onChanged { value in
+                            let h = value.translation.width
+                            let v = abs(value.translation.height)
+                            // Vertical drag while open → close immediately so scroll takes over
+                            if offset < 0 && v > abs(h) {
+                                withAnimation(.spring(response: 0.25, dampingFraction: 0.8)) { offset = 0 }
+                                return
+                            }
+                            guard abs(h) > v else { return }
+                            offset = h < 0 ? max(h, -deleteWidth) : min(0, offset + h)
+                        }
+                        .onEnded { _ in
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) {
+                                offset = offset < -(deleteWidth / 2) ? -deleteWidth : 0
+                            }
+                        }
+                )
+        }
+        .clipped()
+        .onChange(of: resetToken) {
+            guard offset != 0 else { return }
+            withAnimation(.spring(response: 0.25, dampingFraction: 0.8)) { offset = 0 }
+        }
     }
 }
 

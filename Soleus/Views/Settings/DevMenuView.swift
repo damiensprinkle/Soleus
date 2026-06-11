@@ -115,6 +115,24 @@ struct DevMenuView: View {
                     }
 
                     Button(action: {
+                        UserDefaults.standard.removeObject(forKey: "hasSeenSetToggleHint")
+                        UserDefaults.standard.removeObject(forKey: "hasSeenRestTimerHint")
+                        statusMessage = "Active workout hints reset"
+                    }) {
+                        HStack {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(.orange)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Reset Active Workout Hints")
+                                    .foregroundColor(.primary)
+                                Text("Shows set toggle and rest timer hints again")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    }
+
+                    Button(action: {
                         UserDefaults.standard.removeObject(forKey: "lastSeenVersion")
                         statusMessage = "Release notes reset"
                     }) {
@@ -133,6 +151,8 @@ struct DevMenuView: View {
 
                     Button(action: {
                         UserDefaults.standard.removeObject(forKey: "hasSeenLongPressTooltip")
+                        UserDefaults.standard.removeObject(forKey: "hasSeenSetToggleHint")
+                        UserDefaults.standard.removeObject(forKey: "hasSeenRestTimerHint")
                         UserDefaults.standard.removeObject(forKey: "lastSeenVersion")
                         statusMessage = "All app state reset"
                     }) {

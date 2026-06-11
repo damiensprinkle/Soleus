@@ -16,7 +16,7 @@ This directory contains unit tests for the Soleus workout tracking app. Tests us
 ### From Command Line:
 ```bash
 # Run all tests
-xcodebuild test -scheme Soleus -destination 'platform=iOS Simulator,name=iPhone 15'
+xcodebuild test -scheme Soleus -destination 'platform=iOS Simulator,name=iPhone 17,OS=latest'
 ```
 
 ---
@@ -45,10 +45,10 @@ A complete mock implementation of the `WorkoutManaging` protocol that:
 func testExample() {
     // Given
     let mockManager = MockWorkoutManager()
-    let controller = WorkoutTrackerController(workoutManager: mockManager)
+    let viewModel = WorkoutTrackerViewModel(workoutManager: mockManager)
 
     // When
-    controller.deleteWorkout(someId)
+    viewModel.deleteWorkout(someId)
 
     // Then
     XCTAssertTrue(mockManager.deleteWorkoutCalled)

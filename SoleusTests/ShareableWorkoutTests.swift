@@ -79,6 +79,80 @@ final class ShareableWorkoutTests: XCTestCase {
         XCTAssertNil(ShareableWorkout.import(from: Data()))
     }
 
+    func testImport_OversizedData_ReturnsNil() {
+        let oversized = Data(count: ShareableWorkout.maxImportSize + 1)
+        XCTAssertNil(ShareableWorkout.import(from: oversized))
+    }
+
+    // MARK: - Per-field length caps
+
+    func testToWorkoutDetails_ClampsLongExerciseName() {
+        let longName = String(repeating: "A", count: 500)
+        let json = """
+        { "name": "Test", "exercises": [{ "name": "\(longName)", "sets": [] }] }
+        """.data(using: .utf8)!
+
+        let workout = ShareableWorkout.import(from: json)!
+        let details = workout.toWorkoutDetails()
+        XCTAssertEqual(details[0].exerciseName.count, ShareableWorkout.maxNameLength)
+        XCTAssertEqual(details[0].exerciseName, String(repeating: "A", count: ShareableWorkout.maxNameLength))
+    }
+
+    func testToWorkoutDetails_ClampsLongNotes() {
+        let longNotes = String(repeating: "n", count: 5000)
+        let json = """
+        { "name": "Test", "exercises": [{ "name": "Bench", "notes": "\(longNotes)", "sets": [] }] }
+        """.data(using: .utf8)!
+
+        let workout = ShareableWorkout.import(from: json)!
+        let details = workout.toWorkoutDetails()
+        XCTAssertEqual(details[0].notes?.count, ShareableWorkout.maxNotesLength)
+    }
+
+    func testToWorkoutDetails_ShortValuesUnchanged() {
+        let json = """
+        { "name": "Test", "exercises": [{ "name": "Bench", "notes": "Keep elbows tucked", "sets": [] }] }
+        """.data(using: .utf8)!
+
+        let workout = ShareableWorkout.import(from: json)!
+        let details = workout.toWorkoutDetails()
+        XCTAssertEqual(details[0].exerciseName, "Bench")
+        XCTAssertEqual(details[0].notes, "Keep elbows tucked")
+    }
+
+    func testSanitizedWorkoutName_ClampsLongName() {
+        let longName = String(repeating: "W", count: 500)
+        let json = """
+        { "name": "\(longName)", "exercises": [] }
+        """.data(using: .utf8)!
+
+        let workout = ShareableWorkout.import(from: json)!
+        XCTAssertEqual(workout.workoutName.count, 500) // raw field is untouched
+        XCTAssertEqual(workout.sanitizedWorkoutName.count, ShareableWorkout.maxNameLength)
+    }
+
+    func testSanitizedWorkoutName_ShortNameUnchanged() {
+        let json = """
+        { "name": "Push Day", "exercises": [] }
+        """.data(using: .utf8)!
+
+        let workout = ShareableWorkout.import(from: json)!
+        XCTAssertEqual(workout.sanitizedWorkoutName, "Push Day")
+    }
+
+    func testImport_AtSizeLimit_StillAttemptsDecode() {
+        // A payload exactly at the limit should not be rejected for size alone.
+        // It will still fail to decode (random bytes aren't valid JSON), but the
+        // failure path should be JSON decoding, not the size guard.
+        let atLimit = Data(count: ShareableWorkout.maxImportSize)
+        XCTAssertNil(ShareableWorkout.import(from: atLimit))
+        // Round-trip a real workout to confirm normal-sized payloads still work.
+        let details = [makeDetail(name: "Bench", reps: 10, weight: 135)]
+        let exported = ShareableWorkout.export(workoutName: "Test", workoutColor: nil, workoutDetails: details)!
+        XCTAssertLessThan(exported.count, ShareableWorkout.maxImportSize)
+        XCTAssertNotNil(ShareableWorkout.import(from: exported))
+    }
+
     // MARK: - Round-trip
 
     func testRoundTrip_ExportImport() {
@@ -152,6 +226,126 @@ final class ShareableWorkoutTests: XCTestCase {
         XCTAssertEqual(converted[0].orderIndex, 2)
         XCTAssertEqual(converted[0].exerciseQuantifier, "Distance")
         XCTAssertEqual(converted[0].exerciseMeasurement, "Time")
+    }
+
+    // MARK: - Generic JSON import
+
+    func testGenericJSON_MinimalFormat_Imports() {
+        let json = """
+        {
+            "name": "Push Day",
+            "exercises": [
+                { "name": "Bench Press", "sets": [{ "reps": 10, "weight": 135.0 }] }
+            ]
+        }
+        """.data(using: .utf8)!
+
+        guard let workout = ShareableWorkout.import(from: json) else {
+            XCTFail("import returned nil"); return
+        }
+        XCTAssertEqual(workout.workoutName, "Push Day")
+        XCTAssertEqual(workout.exercises.count, 1)
+        XCTAssertEqual(workout.exercises[0].name, "Bench Press")
+        XCTAssertEqual(workout.exercises[0].sets[0].reps, 10)
+        XCTAssertEqual(workout.exercises[0].sets[0].weight, Float(135.0), accuracy: Float(0.01))
+    }
+
+    func testGenericJSON_DefaultsQuantifierAndMeasurement() {
+        let json = """
+        {
+            "name": "Workout",
+            "exercises": [{ "name": "Squat", "sets": [{ "reps": 5 }] }]
+        }
+        """.data(using: .utf8)!
+
+        let workout = ShareableWorkout.import(from: json)!
+        XCTAssertEqual(workout.exercises[0].quantifier, "Reps")
+        XCTAssertEqual(workout.exercises[0].measurement, "Weight")
+    }
+
+    func testGenericJSON_ExplicitQuantifierAndMeasurement() {
+        let json = """
+        {
+            "name": "Cardio",
+            "exercises": [{
+                "name": "5K Run",
+                "quantifier": "Distance",
+                "measurement": "Time",
+                "sets": [{ "distance": 5.0, "time": 1500 }]
+            }]
+        }
+        """.data(using: .utf8)!
+
+        let workout = ShareableWorkout.import(from: json)!
+        XCTAssertEqual(workout.exercises[0].quantifier, "Distance")
+        XCTAssertEqual(workout.exercises[0].measurement, "Time")
+        XCTAssertEqual(workout.exercises[0].sets[0].distance, 5.0, accuracy: 0.01)
+        XCTAssertEqual(workout.exercises[0].sets[0].time, 1500)
+    }
+
+    func testGenericJSON_OmittedSets_DefaultsToThreeEmptySets() {
+        let json = """
+        {
+            "name": "Workout",
+            "exercises": [{ "name": "Deadlift" }]
+        }
+        """.data(using: .utf8)!
+
+        let workout = ShareableWorkout.import(from: json)!
+        XCTAssertEqual(workout.exercises[0].sets.count, 3)
+        XCTAssertEqual(workout.exercises[0].sets[0].reps, 0)
+        XCTAssertEqual(workout.exercises[0].sets[0].weight, 0)
+    }
+
+    func testGenericJSON_Notes_Preserved() {
+        let json = """
+        {
+            "name": "Workout",
+            "exercises": [{ "name": "Pull-up", "notes": "Wide grip", "sets": [] }]
+        }
+        """.data(using: .utf8)!
+
+        let workout = ShareableWorkout.import(from: json)!
+        XCTAssertEqual(workout.exercises[0].notes, "Wide grip")
+    }
+
+    func testGenericJSON_MultipleExercises_OrderPreserved() {
+        let json = """
+        {
+            "name": "Full Body",
+            "exercises": [
+                { "name": "Squat", "sets": [{ "reps": 5, "weight": 225 }] },
+                { "name": "Press", "sets": [{ "reps": 8, "weight": 95 }] },
+                { "name": "Deadlift", "sets": [{ "reps": 3, "weight": 275 }] }
+            ]
+        }
+        """.data(using: .utf8)!
+
+        let workout = ShareableWorkout.import(from: json)!
+        XCTAssertEqual(workout.exercises.count, 3)
+        XCTAssertEqual(workout.exercises[0].name, "Squat")
+        XCTAssertEqual(workout.exercises[0].orderIndex, 0)
+        XCTAssertEqual(workout.exercises[1].name, "Press")
+        XCTAssertEqual(workout.exercises[1].orderIndex, 1)
+        XCTAssertEqual(workout.exercises[2].name, "Deadlift")
+        XCTAssertEqual(workout.exercises[2].orderIndex, 2)
+    }
+
+    func testGenericJSON_MissingName_ReturnsNil() {
+        let json = """
+        { "exercises": [{ "name": "Bench", "sets": [] }] }
+        """.data(using: .utf8)!
+
+        XCTAssertNil(ShareableWorkout.import(from: json))
+    }
+
+    func testGenericJSON_NilColor() {
+        let json = """
+        { "name": "Test", "exercises": [] }
+        """.data(using: .utf8)!
+
+        let workout = ShareableWorkout.import(from: json)!
+        XCTAssertNil(workout.workoutColor)
     }
 
     // MARK: - Helpers
