@@ -18,7 +18,6 @@ struct SettingsView: View {
     @State private var showDocumentPicker = false
     @State private var importedWorkout: ShareableWorkout?
     @State private var showImportPreview = false
-    @State private var showJSONReference = false
 
     @FetchRequest(
         sortDescriptors: [],
@@ -36,7 +35,7 @@ struct SettingsView: View {
         Form {
             Section(
                 header: Text("Utilities"),
-                footer: Text("Import a .soleus file shared from another device, or a plain .json file from any source. For iMessage sharing, tap the link sent to you.")
+                footer: Text("Import a .soleus file shared from another device, or a plain .json file from any source. For iMessage sharing, tap the link sent to you. Need more help? See Help & FAQ below.")
             ) {
                 Button(action: {
                     importedWorkout = nil
@@ -53,17 +52,6 @@ struct SettingsView: View {
                     }
                 }
                 .accessibilityIdentifier(AccessibilityID.settingsImportButton)
-
-                Button(action: { showJSONReference = true }) {
-                    HStack {
-                        Label("JSON Format Reference", systemImage: "curlybraces")
-                            .foregroundColor(.secondary)
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                }
             }
 
             Section(
@@ -210,9 +198,6 @@ struct SettingsView: View {
         .sheet(isPresented: $showingDevMenu) {
             DevMenuView()
         }
-        .sheet(isPresented: $showJSONReference) {
-            JSONReferenceView()
-        }
         } // NavigationStack
     }
 
@@ -241,154 +226,6 @@ struct SettingsView: View {
             }
         } else {
             return "\(seconds)s"
-        }
-    }
-}
-
-private struct JSONReferenceView: View {
-    @Environment(\.dismiss) var dismiss
-    @State private var copied = false
-
-    private let exampleJSON = """
-{
-  "name": "Push Day",
-  "exercises": [
-    {
-      "name": "Bench Press",
-      "quantifier": "Reps",
-      "measurement": "Weight",
-      "notes": "Keep elbows at 45°",
-      "sets": [
-        { "reps": 10, "weight": 135.0 },
-        { "reps": 8,  "weight": 145.0 }
-      ]
-    },
-    {
-      "name": "5K Run",
-      "quantifier": "Distance",
-      "measurement": "Time",
-      "sets": [
-        { "distance": 5.0, "time": 1500 }
-      ]
-    }
-  ]
-}
-"""
-
-    var body: some View {
-        NavigationView {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    Text("Use a plain .json file to import workouts from external sources. Only the fields you need are required — everything else has a sensible default.")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Text("Example")
-                                .font(.caption)
-                                .fontWeight(.semibold)
-                                .foregroundColor(.secondary)
-                                .textCase(.uppercase)
-                            Spacer()
-                            Button(action: {
-                                UIPasteboard.general.string = exampleJSON
-                                copied = true
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) { copied = false }
-                            }) {
-                                Label(copied ? "Copied" : "Copy", systemImage: copied ? "checkmark" : "doc.on.doc")
-                                    .font(.caption)
-                                    .foregroundColor(copied ? .green : .myBlue)
-                            }
-                        }
-
-                        Text(exampleJSON)
-                            .font(.system(.caption, design: .monospaced))
-                            .padding(12)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(Color(.tertiarySystemGroupedBackground))
-                            .cornerRadius(8)
-                    }
-
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Field Reference")
-                            .font(.headline)
-
-                        JSONFieldRow(name: "name", type: "string", required: true, description: "Workout name")
-                        JSONFieldRow(name: "exercises", type: "array", required: true, description: "List of exercises")
-
-                        Divider()
-
-                        Text("Exercise fields")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-
-                        JSONFieldRow(name: "name", type: "string", required: true, description: "Exercise name")
-                        JSONFieldRow(name: "quantifier", type: "string", required: false, description: "\"Reps\" or \"Distance\" — defaults to \"Reps\"")
-                        JSONFieldRow(name: "measurement", type: "string", required: false, description: "\"Weight\" or \"Time\" — defaults to \"Weight\"")
-                        JSONFieldRow(name: "notes", type: "string", required: false, description: "Optional text note")
-                        JSONFieldRow(name: "sets", type: "array", required: false, description: "Defaults to 3 empty sets if omitted")
-
-                        Divider()
-
-                        Text("Set fields")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-
-                        JSONFieldRow(name: "reps", type: "int", required: false, description: "Repetition count, defaults to 0")
-                        JSONFieldRow(name: "weight", type: "float", required: false, description: "Weight in your preferred unit, defaults to 0")
-                        JSONFieldRow(name: "time", type: "int", required: false, description: "Duration in seconds, defaults to 0")
-                        JSONFieldRow(name: "distance", type: "float", required: false, description: "Distance in your preferred unit, defaults to 0")
-                    }
-
-                    Spacer(minLength: 20)
-                }
-                .padding()
-            }
-            .background(Color(.systemGroupedBackground).ignoresSafeArea())
-            .navigationTitle("JSON Format Reference")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") { dismiss() }
-                }
-            }
-        }
-    }
-}
-
-private struct JSONFieldRow: View {
-    let name: String
-    let type: String
-    let required: Bool
-    let description: String
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack(spacing: 6) {
-                Text(name)
-                    .font(.system(.caption, design: .monospaced))
-                    .fontWeight(.semibold)
-                Text(type)
-                    .font(.system(.caption2, design: .monospaced))
-                    .foregroundColor(.secondary)
-                    .padding(.horizontal, 4)
-                    .padding(.vertical, 1)
-                    .background(Color(.tertiarySystemGroupedBackground))
-                    .cornerRadius(3)
-                if required {
-                    Text("required")
-                        .font(.caption2)
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 4)
-                        .padding(.vertical, 1)
-                        .background(Color.myBlue)
-                        .cornerRadius(3)
-                }
-            }
-            Text(description)
-                .font(.caption)
-                .foregroundColor(.secondary)
         }
     }
 }
