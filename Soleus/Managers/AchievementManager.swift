@@ -103,6 +103,30 @@ class AchievementManager: ObservableObject {
         }
     }
 
+    /// Returns the start-of-day dates in the current week that have at least
+    /// one completed workout. Used by the dashboard "This Week" widget.
+    func getWorkoutDaysThisWeek() -> Set<Date> {
+        guard let histories = workoutManager?.fetchAllWorkoutHistoryAllTime(),
+              let weekInterval = Calendar.current.dateInterval(of: .weekOfYear, for: Date()) else {
+            return []
+        }
+
+        let calendar = Calendar.current
+        var days = Set<Date>()
+        for history in histories {
+            guard let date = history.workoutDate, weekInterval.contains(date) else { continue }
+            days.insert(calendar.startOfDay(for: date))
+        }
+        return days
+    }
+
+    /// Returns the most recently completed workout, if any. Used by the
+    /// dashboard "Last Workout" widget.
+    func getMostRecentWorkout() -> WorkoutHistory? {
+        // fetchAllWorkoutHistoryAllTime sorts by workoutDate descending
+        return workoutManager?.fetchAllWorkoutHistoryAllTime()?.first
+    }
+
     /// Returns achievements that were newly unlocked (not previously stored as unlocked)
     func getNewlyUnlockedAchievements() -> [Achievement] {
         let currentProgress = getAchievementProgress()

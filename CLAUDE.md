@@ -78,7 +78,9 @@ All navigation happens through `appViewModel.navigateTo()`. The `WorkoutContentM
 ```
 HomeView (root)
 └── CustomTabView
-    ├── HomeContentView (placeholder)
+    ├── DashboardView (widget cards: this week, last workout, achievements,
+    │   streaks, lifetime stats, PRs — user can toggle/reorder via
+    │   DashboardCustomizeView sheet; config persisted by DashboardConfigStore)
     ├── WorkoutContentMainView
     │   └── NavigationView wraps switch statement:
     │       ├── WorkoutTrackerMainView (grid of workout cards)
@@ -297,5 +299,5 @@ Workouts (1) ←→ (many) WorkoutHistory
 - Active development as of June 2026
 - Targeting App Store submission (previously released via TestFlight)
 - Nutrition tracking feature was removed (see commit 3e42e7b)
-- Home tab is currently a placeholder — a meaningful welcome / dashboard is a known gap for new users
+- Dashboard tab shows customizable widget cards (order/visibility stored as JSON in UserDefaults key `dashboardWidgetConfig`; new `DashboardWidget` cases are auto-appended on load)
 - CI pipeline: GitHub Actions on `macos-26`, scheme `Soleus`, posts coverage report to PRs

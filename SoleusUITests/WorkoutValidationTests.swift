@@ -40,6 +40,11 @@ final class WorkoutValidationTests: SoleusUITestBase {
         XCTAssertTrue(addExerciseButton.waitForExistence(timeout: 5))
         addExerciseButton.tap()
 
+        // Exercise library picker opens first; use Create Custom to reach the dialog
+        let createCustomButton = app.buttons[TestID.exercisePickerCreateCustomButton]
+        XCTAssertTrue(createCustomButton.waitForExistence(timeout: 5))
+        createCustomButton.tap()
+
         // The Add Exercise dialog button should be disabled when name is empty
         let dialogAddButton = app.buttons[TestID.exerciseDialogAddButton]
         XCTAssertTrue(dialogAddButton.waitForExistence(timeout: 5))

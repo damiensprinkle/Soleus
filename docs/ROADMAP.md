@@ -51,35 +51,6 @@ Workout data, history, and settings now sync automatically across all devices si
 
 These features require new screens or data models but no external dependencies.
 
----
-
-### My Exercises `Free`
-
-**Problem:** Every time a user builds or edits a workout plan they must type exercise names from scratch. There is no memory of exercises they have used before, which slows down plan creation and leads to inconsistent naming (e.g., "Bench" vs "Bench Press" vs "Flat Bench") that fragments history. Additionally, the rest timer is global — users who alternate between heavy compound lifts (needing 3 minutes) and isolation work (needing 60 seconds) must manually change the setting between exercises.
-
-**Solution:**
-
-*Exercise Library:*
-- Pre-populate the library with ~50–60 common exercises organized by muscle group category (Chest, Back, Shoulders, Arms, Legs, Core, Cardio), each with a short description and sensible defaults for quantifier and measurement
-- Maintain a persistent `ExerciseTemplate` entity in CoreData — every unique exercise name is also saved automatically the first time it is added to any workout plan
-- Users can create, rename, or delete exercises from a dedicated "My Exercises" screen accessible from Settings
-- Each library entry stores: name, description, category, default quantifier (Reps / Distance), default measurement (Weight / Time), and a usage count
-
-*Exercise Selection in Workout Builder:*
-- Tapping "Add Exercise" opens a searchable sheet with the full exercise library, filterable by category
-- Tapping an exercise pre-fills the name, quantifier, and measurement from its library defaults
-- A "Create Custom" option at the bottom of the sheet allows adding an exercise not in the library
-- Usage count surfaces frequently used exercises at the top of the list
-
-*Exercise-Specific Rest Timer:*
-- Each exercise in a workout plan can override the global rest timer with its own duration
-- Set via a "Rest: Xs" chip on each exercise card in the edit workout view — tapping opens the same duration picker used in Preferences
-- Override hierarchy: exercise-specific duration → global Preferences fallback
-- If no override is set, the exercise inherits the global setting transparently
-- Users can also adjust the rest duration per-exercise on the fly during an active workout
-
----
-
 ### Weekly Workout Schedule `Free`
 
 **Problem:** Users have workout templates but no way to plan which workouts happen on which days. There is no structure to guide their week.
@@ -92,39 +63,6 @@ These features require new screens or data models but no external dependencies.
 - Schedule is stored locally in CoreData and does not require an account
 - Integrates with streak tracking — a scheduled day counts toward the streak only if the scheduled workout (or any workout) is completed
 
----
-
-### Workout History Calendar View `Free`
-
-**Problem:** The history view lists completed workouts chronologically but gives no spatial sense of consistency. Users cannot quickly see whether they worked out 3 days in a row, skipped a week, or are hitting their weekly goal.
-
-**Solution:**
-- Add a calendar mode toggle to `WorkoutHistoryView` alongside the existing list view
-- Calendar renders the current month with a small green checkmark or dot on each day a workout was completed
-- Tapping a marked day expands a compact summary of the workout(s) completed that day — name, duration, key stats
-- Navigation arrows allow scrolling backward through past months
-- Forward navigation is capped at the current month (no future months)
-- The data source is the existing `WorkoutHistory` CoreData entity — no new storage required
-- Calendar and list views share the same month/year picker so switching modes preserves the selected month
-
----
-
-### Progress Charts (Exercise History Graphs) `Pro`
-
-**Problem:** The existing Progress view shows trend arrows and a text table of recent sessions but no actual visual chart. Users cannot see the shape of their progress over time at a glance.
-
-**Solution:**
-- Add a line chart to `ExerciseProgressDetail` using Swift Charts (iOS 16+, no external dependency)
-- Chart plots max weight per session on the Y axis and session date on the X axis
-- Toggle between three metrics: Max Weight, Total Reps, Total Volume — chart updates instantly
-- Tapping a data point shows a tooltip with the exact date and value
-- Chart spans all available history for that exercise regardless of the time period filter selected in the list view
-- Fix the existing bug where cardio exercises display weight-based volume (0) — cardio exercises show total distance and total time instead
-- Fix the avg duration calculation bug (currently shows first session's time instead of average)
-- Remove the hard cap of 5 recent sessions in the text table — show all sessions with a scroll view
-- Decouple the Progress view from the Monthly filter — progress always shows all-time data
-
----
 
 ### Progressive Overload Suggestions `Pro`
 

@@ -4,6 +4,9 @@ struct AddExerciseDialog: View {
     @Binding var workoutDetails: [WorkoutDetailInput]
     @Binding var showingDialog: Bool
     var showPermanentNote: Bool = false
+    /// When set, the dialog is embedded in the exercise picker sheet and the
+    /// cancel action returns to the library instead of dismissing.
+    var onBack: (() -> Void)? = nil
     @State private var selectedWorkoutQuantifier: String = "Reps"
     @State private var selectedWorkoutMeasurement: String = "Weight"
 
@@ -135,8 +138,14 @@ struct AddExerciseDialog: View {
                 .accessibilityIdentifier(AccessibilityID.exerciseDialogAddButton)
                 .disabled(exerciseName.trimmingCharacters(in: .whitespaces).isEmpty)
 
-                Button(action: { showingDialog = false }) {
-                    Text("Cancel")
+                Button(action: {
+                    if let onBack = onBack {
+                        onBack()
+                    } else {
+                        showingDialog = false
+                    }
+                }) {
+                    Text(onBack == nil ? "Cancel" : "Back to Library")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                         .frame(maxWidth: .infinity)

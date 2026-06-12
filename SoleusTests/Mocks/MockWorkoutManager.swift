@@ -37,7 +37,8 @@ class MockWorkoutManager: ObservableObject, WorkoutManaging {
         sets: [SetInput],
         exerciseMeasurement: String,
         exerciseQuantifier: String,
-        notes: String? = nil
+        notes: String? = nil,
+        restDuration: Int32 = 0
     ) {
         addWorkoutDetailCalled = true
 

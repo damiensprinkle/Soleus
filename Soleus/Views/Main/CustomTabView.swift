@@ -42,6 +42,19 @@ struct CustomTabView: View {
         }
         .navigationViewStyle(.stack)
         .ignoresSafeArea(.keyboard)
+        .onChange(of: appViewModel.currentView) { _, newView in
+            // Dashboard widgets can navigate into workout-flow views (resume
+            // banner, last-workout card). Those render inside the workout tab,
+            // so follow the navigation there.
+            switch newView {
+            case .workoutActiveView, .workoutHistoryView, .workoutOverview, .customizeCardView:
+                if selectedTab != .workout {
+                    selectedTab = .workout
+                }
+            case .main, .achievementsView:
+                break
+            }
+        }
     }
 
     @ViewBuilder

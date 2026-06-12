@@ -8,6 +8,17 @@ struct ReleaseNotesView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
                     releaseSection(
+                        version: "v1.0.5",
+                        items: [
+                            ("dumbbell.fill", "My Exercises", "A built-in exercise library with 55+ pre-seeded exercises across 9 categories. Browse, search, and pick exercises when building a workout — no more typing names from scratch."),
+                            ("plus.circle.fill", "Custom Exercises", "Create your own exercises with a name, description, category, and default tracking settings. Custom exercises live in My Exercises (Settings → Utilities)."),
+                            ("timer", "Per-Exercise Rest Timer", "Set a different rest duration for each exercise in a workout plan. When a set is completed, the rest timer uses that exercise's own duration instead of the global default."),
+                            ("calendar", "History Calendar View", "A new calendar mode in Workout History shows a green dot on every day you trained. Tap a day to expand a workout summary — exercises and sets, right in the calendar."),
+                            ("chart.line.uptrend.xyaxis", "Improved Progress View", "The Progress tab is fully redesigned with area charts, a best-performance highlight, and a search field so you can quickly find any exercise across hundreds of entries."),
+                        ]
+                    )
+
+                    releaseSection(
                         version: "v1.0.3",
                         items: [
                             ("icloud.fill", "iCloud Sync", "Your workouts, history, and settings now sync automatically across all your devices via iCloud. Your data is stored in your personal iCloud account — we never see it."),

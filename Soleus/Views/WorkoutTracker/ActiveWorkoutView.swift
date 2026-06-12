@@ -61,14 +61,15 @@ struct ActiveWorkoutView: View {
                             .zIndex(1)
                     }
 
-                    // Rest timer at top
-                    if viewModel.workoutStarted {
+                    // Rest timer at top — hidden while typing so it doesn't push
+                    // the focused row up under the keyboard (timer keeps running)
+                    if viewModel.workoutStarted && !focusManager.isAnyTextFieldFocused {
                         RestTimerView(restTimer: restTimer)
                             .padding(.top, 8)
                             .zIndex(1)
                     }
 
-                    if restTimer.isResting && !hasSeenRestTimerHint {
+                    if restTimer.isResting && !hasSeenRestTimerHint && !focusManager.isAnyTextFieldFocused {
                         firstTimeHint(
                             icon: "timer",
                             title: "Rest timer started",
@@ -100,7 +101,7 @@ struct ActiveWorkoutView: View {
                     } else if viewModel.workoutStarted && !hasSeenSetToggleHint {
                         firstTimeHint(
                             icon: "checkmark.circle.fill",
-                            title: "Tap the green circle to mark a set complete",
+                            title: "Tap the slider to mark a set complete",
                             subtitle: "Sets auto-complete once required fields are filled"
                         ) {
                             hasSeenSetToggleHint = true
@@ -113,6 +114,21 @@ struct ActiveWorkoutView: View {
                         }
                         .scrollContentBackground(.hidden)
                         .scrollDismissesKeyboard(.immediately)
+                        // Single keyboard toolbar for all set fields — per-row
+                        // ToolbarItems inside a Form don't render reliably
+                        .toolbar {
+                            ToolbarItemGroup(placement: .keyboard) {
+                                if focusManager.isAnyTextFieldFocused {
+                                    Spacer()
+                                    Button(action: dismissKeyboard) {
+                                        Image(systemName: "checkmark")
+                                            .fontWeight(.semibold)
+                                    }
+                                    .accessibilityLabel("Done")
+                                    .accessibilityIdentifier(AccessibilityID.keyboardDoneButton)
+                                }
+                            }
+                        }
                         .onChange(of: editingNotesIndex) {
                             guard let index = editingNotesIndex else { return }
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
@@ -124,9 +140,7 @@ struct ActiveWorkoutView: View {
                     }
                     .onTapGesture {
                         if focusManager.isAnyTextFieldFocused {
-                            focusManager.isAnyTextFieldFocused = false
-                            focusManager.currentlyFocusedField = nil
-                            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                            dismissKeyboard()
                         }
                     }
 
@@ -251,6 +265,12 @@ struct ActiveWorkoutView: View {
                 // Stop rest timer when leaving the view
                 restTimer.skipRest()
             }
+            // Covers every dismissal path (checkmark, scroll, tap) so the
+            // focus flag can't stay stuck and keep the timers hidden
+            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
+                focusManager.isAnyTextFieldFocused = false
+                focusManager.currentlyFocusedField = nil
+            }
             .sheet(isPresented: $showAddExerciseDialog) {
                 AddExerciseDialog(
                     workoutDetails: $workoutController.workoutDetails,
@@ -364,6 +384,28 @@ struct ActiveWorkoutView: View {
                                     .disabled(focusManager.isAnyTextFieldFocused)
                                 }
 
+                                Menu {
+                                    Button(action: { workoutController.workoutDetails[index].restDuration = 0 }) {
+                                        if workoutController.workoutDetails[index].restDuration == 0 {
+                                            Label("Default (\(RestDuration.format(defaultRestDuration)))", systemImage: "checkmark")
+                                        } else {
+                                            Text("Default (\(RestDuration.format(defaultRestDuration)))")
+                                        }
+                                    }
+                                    Divider()
+                                    ForEach(RestDuration.options, id: \.self) { option in
+                                        Button(action: { workoutController.workoutDetails[index].restDuration = Int32(option) }) {
+                                            if workoutController.workoutDetails[index].restDuration == Int32(option) {
+                                                Label(RestDuration.format(option), systemImage: "checkmark")
+                                            } else {
+                                                Text(RestDuration.format(option))
+                                            }
+                                        }
+                                    }
+                                } label: {
+                                    Label("Rest Timer", systemImage: "timer")
+                                }
+
                                 Divider()
 
                                 Button(role: .destructive, action: {
@@ -474,6 +516,12 @@ struct ActiveWorkoutView: View {
             }
             .id("exercise_\(index)")
         }
+    }
+
+    private func dismissKeyboard() {
+        focusManager.isAnyTextFieldFocused = false
+        focusManager.currentlyFocusedField = nil
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 
     private func commitRename(for index: Int) {
@@ -672,7 +720,8 @@ struct ActiveWorkoutView: View {
                     sets: detail.sets,
                     exerciseMeasurement: detail.exerciseMeasurement,
                     exerciseQuantifier: detail.exerciseQuantifier,
-                    notes: detail.notes
+                    notes: detail.notes,
+                    restDuration: detail.restDuration
                 )
 
                 // Fetch the workout again to get the newly created exerciseId

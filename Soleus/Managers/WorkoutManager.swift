@@ -19,6 +19,7 @@ class WorkoutManager: ObservableObject, WorkoutManaging {
     @Published var workouts: [WorkoutInfo] = []
     var errorHandler: ErrorHandler?
     var healthKitManager: HealthKitManager?
+    var exerciseLibrary: ExerciseLibraryManager?
 
     // MARK: - Background Context Helpers
 
@@ -67,7 +68,7 @@ class WorkoutManager: ObservableObject, WorkoutManaging {
     
     // MARK: Core Data Operations
     
-    func addWorkoutDetail(id: UUID, workoutTitle: String, exerciseName: String, color: String , orderIndex: Int32, sets: [SetInput], exerciseMeasurement: String, exerciseQuantifier: String, notes: String? = nil) {
+    func addWorkoutDetail(id: UUID, workoutTitle: String, exerciseName: String, color: String , orderIndex: Int32, sets: [SetInput], exerciseMeasurement: String, exerciseQuantifier: String, notes: String? = nil, restDuration: Int32 = 0) {
         guard let context = self.context,
               let workout = findOrCreateWorkout(withTitle: workoutTitle, color: color) else { return }
 
@@ -80,6 +81,8 @@ class WorkoutManager: ObservableObject, WorkoutManaging {
         newExerciseDetail.exerciseQuantifier = exerciseQuantifier
         newExerciseDetail.exerciseMeasurement = exerciseMeasurement
         newExerciseDetail.notes = notes
+        newExerciseDetail.restDuration = restDuration
+        exerciseLibrary?.recordUsage(name: exerciseName, quantifier: exerciseQuantifier, measurement: exerciseMeasurement)
         AppLogger.workout.debug("Adding exercise '\(exerciseName)' at order index \(orderIndex)")
         // Add sets to the exercise detail
         for setInput in sets {
@@ -218,6 +221,7 @@ class WorkoutManager: ObservableObject, WorkoutManaging {
             newTempDetail.exerciseQuantifier = exerciseQuantifier
             newTempDetail.exerciseMeasurement = exerciseMeasurement
             newTempDetail.notes = notes
+            exerciseLibrary?.recordUsage(name: exerciseName, quantifier: exerciseQuantifier, measurement: exerciseMeasurement)
 
             // Add initial sets
             for setInput in sets {
@@ -411,6 +415,7 @@ class WorkoutManager: ObservableObject, WorkoutManaging {
                         newDetail.orderIndex = originalDetail.orderIndex
                         newDetail.exerciseQuantifier = originalDetail.exerciseQuantifier
                         newDetail.exerciseMeasurement = originalDetail.exerciseMeasurement
+                        newDetail.restDuration = originalDetail.restDuration
 
                         // Copy all sets from the original detail to the new detail
                         if let originalSets = originalDetail.sets as? Set<WorkoutSet> {
@@ -685,6 +690,9 @@ class WorkoutManager: ObservableObject, WorkoutManaging {
                 detail = WorkoutDetail(context: context)
                 workout.addToDetails(detail)
                 detail.exerciseId = inputDetail.exerciseId ?? UUID()
+                // Only newly added exercises count toward library usage —
+                // re-saving an existing plan shouldn't inflate the counts.
+                exerciseLibrary?.recordUsage(name: inputDetail.exerciseName, quantifier: inputDetail.exerciseQuantifier, measurement: inputDetail.exerciseMeasurement)
             }
 
             detail.exerciseName = inputDetail.exerciseName
@@ -692,6 +700,7 @@ class WorkoutManager: ObservableObject, WorkoutManaging {
             detail.exerciseQuantifier = inputDetail.exerciseQuantifier
             detail.exerciseMeasurement = inputDetail.exerciseMeasurement
             detail.notes = inputDetail.notes
+            detail.restDuration = inputDetail.restDuration
             updateOrAddSets(forDetail: detail, withSetsInput: inputDetail.sets, inContext: context)
         }
 

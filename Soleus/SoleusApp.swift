@@ -34,6 +34,7 @@ struct SoleusApp: App {
     @StateObject private var errorHandler = ErrorHandler()
     @StateObject private var achievementManager = AchievementManager()
     @StateObject private var healthKitManager = HealthKitManager()
+    @StateObject private var exerciseLibraryManager = ExerciseLibraryManager()
 
 
     init() {
@@ -44,6 +45,8 @@ struct SoleusApp: App {
             UserDefaults.standard.set(true, forKey: "hasSeenLongPressTooltip")
             UserDefaults.standard.set(true, forKey: "hasSeenSetToggleHint")
             UserDefaults.standard.set(true, forKey: "hasSeenRestTimerHint")
+            // The UI-test store is in-memory, so force a fresh library seed each launch
+            UserDefaults.standard.removeObject(forKey: "hasSeededExerciseLibrary")
             let currentVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
             UserDefaults.standard.set(currentVersion, forKey: "lastSeenVersion")
         }
@@ -74,16 +77,25 @@ struct SoleusApp: App {
                 .environmentObject(errorHandler)
                 .environmentObject(achievementManager)
                 .environmentObject(healthKitManager)
+                .environmentObject(exerciseLibraryManager)
                 .errorAlert(errorHandler)
                 .onAppear() {
                     // Initialize CoreData context for managers
                     if workoutManager.context == nil {
                         workoutManager.context = persistenceController.container.viewContext
                     }
+                    if exerciseLibraryManager.context == nil {
+                        exerciseLibraryManager.context = persistenceController.container.viewContext
+                    }
                     // Link achievement manager to workout manager
                     achievementManager.workoutManager = workoutManager
                     // Wire HealthKit manager to workout manager
                     workoutManager.healthKitManager = healthKitManager
+                    // Wire exercise library so plan saves record usage automatically
+                    workoutManager.exerciseLibrary = exerciseLibraryManager
+                    if persistenceController.isLoaded {
+                        exerciseLibraryManager.seedDefaultLibraryIfNeeded()
+                    }
 
                     #if DEBUG
                     // Inject a test workout for UI testing the import preview
@@ -108,6 +120,12 @@ struct SoleusApp: App {
                         )
                     }
                     #endif
+                }
+                .onChange(of: persistenceController.isLoaded) { _, loaded in
+                    // Stores load asynchronously; seed once they're ready
+                    if loaded {
+                        exerciseLibraryManager.seedDefaultLibraryIfNeeded()
+                    }
                 }
                 .onOpenURL { url in
                     if url.scheme == "soleus" {

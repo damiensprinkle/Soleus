@@ -102,7 +102,7 @@ struct WorkoutHistoryCardView: View {
                 Spacer()
 
                 Button(action: {
-                    withAnimation(.spring()) {
+                    withAnimation(.easeInOut(duration: 0.25)) {
                         isExpanded.toggle()
                     }
                 }) {
@@ -119,29 +119,8 @@ struct WorkoutHistoryCardView: View {
             
             // Exercises list
             if isExpanded {
-                VStack(spacing: 8) {
-                    if let exercises = history.details?.allObjects as? [WorkoutDetail], !exercises.isEmpty {
-                        ForEach(exercises.sorted(by: { ($0.orderIndex) < ($1.orderIndex) }), id: \.self) { detail in
-                            exerciseDetailView(detail: detail)
-                        }
-                    } else {
-                        HStack {
-                            Spacer()
-                            Text("No exercises recorded")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                            Spacer()
-                        }
-                        .padding(.vertical, 8)
-                    }
-                }
-                .padding(12)
-                .background(Color(.tertiarySystemGroupedBackground))
-                .cornerRadius(10)
-                .transition(.asymmetric(
-                    insertion: .opacity.combined(with: .move(edge: .top)),
-                    removal: .opacity.combined(with: .move(edge: .top))
-                ))
+                HistoryExerciseList(history: history)
+                    .transition(.opacity)
             }
         }
         .padding(16)
@@ -166,6 +145,39 @@ struct WorkoutHistoryCardView: View {
         }
     }
     
+}
+
+// MARK: - Shared Exercise List
+
+/// Renders the exercise details of a history snapshot. Used by both the
+/// history list cards and the calendar day summaries.
+struct HistoryExerciseList: View {
+    let history: WorkoutHistory
+    @AppStorage("weightPreference") private var weightPreference: String = "Lbs"
+    @AppStorage("distancePreference") private var distancePreference: String = "mile"
+
+    var body: some View {
+        VStack(spacing: 8) {
+            if let exercises = history.details?.allObjects as? [WorkoutDetail], !exercises.isEmpty {
+                ForEach(exercises.sorted(by: { ($0.orderIndex) < ($1.orderIndex) }), id: \.self) { detail in
+                    exerciseDetailView(detail: detail)
+                }
+            } else {
+                HStack {
+                    Spacer()
+                    Text("No exercises recorded")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                }
+                .padding(.vertical, 8)
+            }
+        }
+        .padding(12)
+        .background(Color(.tertiarySystemGroupedBackground))
+        .cornerRadius(10)
+    }
+
     @ViewBuilder
     private func exerciseDetailView(detail: WorkoutDetail) -> some View {
         VStack(alignment: .leading, spacing: 8) {

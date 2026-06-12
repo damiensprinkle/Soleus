@@ -61,6 +61,11 @@ final class CreateWorkoutFlowTests: SoleusUITestBase {
         XCTAssertTrue(addExerciseButton.waitForExistence(timeout: 5), "Add Exercise button should appear after keyboard dismisses")
         addExerciseButton.tap()
 
+        // Exercise library picker opens first; use Create Custom for a free-form name
+        let createCustomButton = app.buttons[TestID.exercisePickerCreateCustomButton]
+        XCTAssertTrue(createCustomButton.waitForExistence(timeout: 5), "Exercise picker should open with a Create Custom option")
+        createCustomButton.tap()
+
         // Fill exercise name
         let exerciseNameField = app.textFields[TestID.exerciseNameField]
         XCTAssertTrue(exerciseNameField.waitForExistence(timeout: 5))

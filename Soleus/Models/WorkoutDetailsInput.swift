@@ -9,6 +9,9 @@ struct WorkoutDetailInput: Equatable {
     var sets: [SetInput] = []
     var exerciseQuantifier: String = ""
     var exerciseMeasurement: String = ""
+    /// Per-exercise rest timer override in seconds. 0 = use the global
+    /// "defaultRestDuration" preference.
+    var restDuration: Int32 = 0
 }
 
 struct SetInput: Identifiable, Equatable {

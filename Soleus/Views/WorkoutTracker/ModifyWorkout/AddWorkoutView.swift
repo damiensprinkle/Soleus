@@ -20,7 +20,8 @@ struct AddWorkoutView: View {
     @State private var initialWorkoutDetails: [WorkoutDetailInput] = []
 
     private let colorManager = ColorManager()
-    @State private var showingAddExerciseDialog = false
+    @State private var showingExercisePicker = false
+    @State private var showingCustomExerciseForm = false
     @State private var showingTemplatePickerSheet = false
     @State private var pendingTemplate: WorkoutTemplate? = nil
     @State private var formID = UUID()
@@ -180,12 +181,39 @@ struct AddWorkoutView: View {
                 .presentationDetents([.medium, .large])
                 .presentationDragIndicator(.visible)
             }
-            .sheet(isPresented: $showingAddExerciseDialog) {
-                AddExerciseDialog(
-                    workoutDetails: $workoutController.workoutDetails,
-                    showingDialog: $showingAddExerciseDialog
-                )
-                .presentationDetents([.height(420)])
+            .sheet(isPresented: $showingExercisePicker, onDismiss: {
+                showingCustomExerciseForm = false
+            }) {
+                // One sheet hosts both stages: the library picker and the
+                // custom-exercise form swap in place, resizing the detent.
+                Group {
+                    if showingCustomExerciseForm {
+                        AddExerciseDialog(
+                            workoutDetails: $workoutController.workoutDetails,
+                            showingDialog: $showingExercisePicker,
+                            onBack: {
+                                withAnimation(.easeInOut(duration: 0.25)) {
+                                    showingCustomExerciseForm = false
+                                }
+                            }
+                        )
+                        .transition(.move(edge: .trailing).combined(with: .opacity))
+                    } else {
+                        ExercisePickerView(
+                            isPresented: $showingExercisePicker,
+                            onSelect: { template in
+                                addExercise(from: template)
+                            },
+                            onCreateCustom: {
+                                withAnimation(.easeInOut(duration: 0.25)) {
+                                    showingCustomExerciseForm = true
+                                }
+                            }
+                        )
+                        .transition(.move(edge: .leading).combined(with: .opacity))
+                    }
+                }
+                .presentationDetents(showingCustomExerciseForm ? [.height(420)] : [.large])
                 .presentationDragIndicator(.visible)
                 .ignoresSafeArea(.keyboard)
             }
@@ -197,7 +225,7 @@ struct AddWorkoutView: View {
             Button(action: {
                 UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
                 withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                    showingAddExerciseDialog = true
+                    showingExercisePicker = true
                 }
             }) {
                 HStack(spacing: 8) {
@@ -266,6 +294,7 @@ struct AddWorkoutView: View {
 
                         TextField("Enter Workout Title", text: $workoutTitle)
                             .focused($isTitleFocused)
+                            .submitLabel(.done)
                             .font(.body)
                             .padding(16)
                             .background(Color(.secondarySystemGroupedBackground))
@@ -295,6 +324,7 @@ struct AddWorkoutView: View {
                             ),
                             exerciseQuantifier: detail.exerciseQuantifier,
                             exerciseMeasurement: detail.exerciseMeasurement,
+                            restDuration: detail.restDuration,
                             focusManager: focusManager,
                             moveUpAction: {
                                 workoutController.moveExercise(from: index, to: index - 1)
@@ -313,6 +343,9 @@ struct AddWorkoutView: View {
                             },
                             onNotesChange: { newNotes in
                                 workoutController.workoutDetails[index].notes = newNotes
+                            },
+                            onRestDurationChange: { newDuration in
+                                workoutController.workoutDetails[index].restDuration = newDuration
                             },
                             addSetAction: {
                                 workoutController.addSet(for: index)
@@ -358,12 +391,14 @@ struct AddWorkoutView: View {
         @Binding var sets: [SetInput]
         let exerciseQuantifier: String
         let exerciseMeasurement: String
+        let restDuration: Int32
         let focusManager: FocusManager
         var moveUpAction: (() -> Void)?
         var moveDownAction: (() -> Void)?
         var deleteAction: (() -> Void)?
         var onRename: ((String) -> Void)?
         var onNotesChange: ((String?) -> Void)?
+        var onRestDurationChange: ((Int32) -> Void)?
         var addSetAction: (() -> Void)?
         var swipeResetToken: Int = 0
 
@@ -373,6 +408,7 @@ struct AddWorkoutView: View {
         @State private var isEditingNotes = false
         @State private var editingNotes = ""
         @FocusState private var isNotesFocused: Bool
+        @AppStorage("defaultRestDuration") private var defaultRestDuration: Int = 60
 
         var body: some View {
             VStack(spacing: 0) {
@@ -454,6 +490,43 @@ struct AddWorkoutView: View {
                                     .foregroundColor(.primary)
                             }
                         }
+                    }
+
+                    // Per-exercise rest timer override
+                    HStack {
+                        Menu {
+                            Button(action: { onRestDurationChange?(0) }) {
+                                if restDuration == 0 {
+                                    Label("Default (\(RestDuration.format(defaultRestDuration)))", systemImage: "checkmark")
+                                } else {
+                                    Text("Default (\(RestDuration.format(defaultRestDuration)))")
+                                }
+                            }
+                            Divider()
+                            ForEach(RestDuration.options, id: \.self) { option in
+                                Button(action: { onRestDurationChange?(Int32(option)) }) {
+                                    if restDuration == Int32(option) {
+                                        Label(RestDuration.format(option), systemImage: "checkmark")
+                                    } else {
+                                        Text(RestDuration.format(option))
+                                    }
+                                }
+                            }
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "timer")
+                                Text(restDuration > 0 ? "Rest: \(RestDuration.formatShort(Int(restDuration)))" : "Rest: Default")
+                            }
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundColor(restDuration > 0 ? .myBlue : .secondary)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(
+                                Capsule().fill(restDuration > 0 ? Color.myBlue.opacity(0.12) : Color.gray.opacity(0.15))
+                            )
+                        }
+                        Spacer()
                     }
 
                     // Notes display / inline edit
@@ -615,6 +688,30 @@ struct AddWorkoutView: View {
         workoutController.workoutDetails.remove(atOffsets: offsets)
     }
     
+    private func addExercise(from template: ExerciseTemplate) {
+        let quantifier = template.defaultQuantifier ?? "Reps"
+        let measurement = template.defaultMeasurement ?? "Weight"
+        let newIndex = workoutController.workoutDetails.last?.orderIndex ?? 0
+        workoutController.workoutDetails.append(WorkoutDetailInput(
+            id: UUID(),
+            exerciseName: template.name ?? "Exercise",
+            orderIndex: newIndex + 1,
+            sets: [SetInput(
+                id: UUID(),
+                reps: 0,
+                weight: 0,
+                time: 0,
+                distance: 0,
+                isCompleted: false,
+                setIndex: 1,
+                exerciseQuantifier: quantifier,
+                exerciseMeasurement: measurement
+            )],
+            exerciseQuantifier: quantifier,
+            exerciseMeasurement: measurement
+        ))
+    }
+
     private func applyTemplate(_ template: WorkoutTemplate) {
         workoutTitle = template.name
         workoutController.workoutDetails = template.toWorkoutDetails()

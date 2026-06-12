@@ -28,7 +28,6 @@ struct SettingsView: View {
 
     private var isDeveloperModeEnabled: Bool { !developerWorkouts.isEmpty }
 
-    private let restDurationOptions = [15, 30, 45, 60, 90, 120, 180, 240, 300]
 
     var body: some View {
         NavigationStack {
@@ -52,6 +51,15 @@ struct SettingsView: View {
                     }
                 }
                 .accessibilityIdentifier(AccessibilityID.settingsImportButton)
+
+                NavigationLink(destination: MyExercisesView()) {
+                    HStack {
+                        Label("My Exercises", systemImage: "dumbbell")
+                            .foregroundColor(.primary)
+                        Spacer()
+                    }
+                }
+                .accessibilityIdentifier(AccessibilityID.settingsMyExercisesButton)
             }
 
             Section(
@@ -66,6 +74,7 @@ struct SettingsView: View {
                     Text("Apple Health")
                 }
                 .accessibilityIdentifier(AccessibilityID.settingsHealthKitButton)
+
 
                 Picker("Appearance", selection: $appearancePreference) {
                     Text("Dark").tag("dark")
@@ -91,8 +100,8 @@ struct SettingsView: View {
 
                 if autoStartRestTimer {
                     Picker("Default Rest Duration", selection: $defaultRestDuration) {
-                        ForEach(restDurationOptions, id: \.self) { seconds in
-                            Text(formatRestDuration(seconds)).tag(seconds)
+                        ForEach(RestDuration.options, id: \.self) { seconds in
+                            Text(RestDuration.format(seconds)).tag(seconds)
                         }
                     }
                 }
@@ -201,31 +210,4 @@ struct SettingsView: View {
         } // NavigationStack
     }
 
-    private func formatRestDuration(_ seconds: Int) -> String {
-        if seconds >= 60 {
-            let minutes = seconds / 60
-            let remainingSeconds = seconds % 60
-            if remainingSeconds > 0 {
-                return "\(minutes)m \(remainingSeconds)s"
-            } else {
-                return "\(minutes) minute\(minutes == 1 ? "" : "s")"
-            }
-        } else {
-            return "\(seconds) seconds"
-        }
-    }
-
-    private func formatRestDurationShort(_ seconds: Int) -> String {
-        if seconds >= 60 {
-            let minutes = seconds / 60
-            let remainingSeconds = seconds % 60
-            if remainingSeconds > 0 {
-                return "\(minutes):\(String(format: "%02d", remainingSeconds))"
-            } else {
-                return "\(minutes)min"
-            }
-        } else {
-            return "\(seconds)s"
-        }
-    }
 }

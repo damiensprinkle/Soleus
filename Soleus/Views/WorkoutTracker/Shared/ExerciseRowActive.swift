@@ -102,7 +102,9 @@ struct ExerciseRowActive: View {
 
                 // Auto-start rest timer only for user-initiated completions
                 if checked && autoStartRestTimer && workoutStarted && !wasExternal {
-                    restTimer.startRest(duration: defaultRestDuration)
+                    // Per-exercise override wins; 0 means use the global preference
+                    let duration = workoutDetails.restDuration > 0 ? Int(workoutDetails.restDuration) : defaultRestDuration
+                    restTimer.startRest(duration: duration)
                 }
             }
             .frame(width: 50)
@@ -120,33 +122,6 @@ struct ExerciseRowActive: View {
                  resetWorkoutDetails()
              }
          }
-        .toolbar {
-            ToolbarItem(placement: .keyboard) {
-                if(focusedField == .distance){
-                    Button("Done") {
-                        resetFocusedField()
-                        
-                    }
-                }
-                if(focusedField == .time) {
-                    Button("Done") {
-                        resetFocusedField()
-                        
-                    }
-                }
-                if(focusedField == .weight){
-                    Button("Done") {
-                        resetFocusedField()
-                        
-                    }
-                }
-                if(focusedField == .reps) {
-                    Button("Done") {
-                        resetFocusedField()
-                    }
-                }
-            }
-        }
         .disabled(!workoutStarted)
         .opacity(!workoutStarted ? 0.5 : 1)
         .foregroundColor(!workoutStarted ? .gray : .myBlack)
@@ -227,12 +202,6 @@ struct ExerciseRowActive: View {
             .accessibilityValue("\(setInput.reps) reps")
             .accessibilityHint("Double tap to edit number of repetitions")
             .accessibilityIdentifier("reps_set_\(setIndex)")
-    }
-    
-    private func resetFocusedField(){
-        focusedField = nil
-        focusManager.isAnyTextFieldFocused = false
-        focusManager.currentlyFocusedField = nil
     }
     
     private var distanceTextField: some View {

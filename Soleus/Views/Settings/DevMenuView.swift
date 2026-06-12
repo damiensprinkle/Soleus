@@ -412,7 +412,8 @@ struct DevMenuView: View {
                             sets: sampleSets,
                             exerciseMeasurement: "Weight",
                             exerciseQuantifier: "Reps",
-                            notes: nil
+                            notes: nil,
+                            restDuration: 0
                         )
                     }
                 }

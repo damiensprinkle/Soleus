@@ -89,7 +89,8 @@ class WorkoutTrackerViewModel: ObservableObject {
                     sets: detail.sets,
                     exerciseMeasurement: detail.exerciseMeasurement,
                     exerciseQuantifier: detail.exerciseQuantifier,
-                    notes: detail.notes
+                    notes: detail.notes,
+                    restDuration: detail.restDuration
                 )
             }
         }
@@ -215,7 +216,8 @@ class WorkoutTrackerViewModel: ObservableObject {
                     orderIndex: detail.orderIndex,
                     sets: setInputs,
                     exerciseQuantifier: exerciseQuantifier,
-                    exerciseMeasurement: exerciseMeasurement
+                    exerciseMeasurement: exerciseMeasurement,
+                    restDuration: detail.restDuration
                 )
             }
         }

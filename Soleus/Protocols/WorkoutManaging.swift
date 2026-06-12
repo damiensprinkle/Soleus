@@ -23,7 +23,8 @@ protocol WorkoutManaging: AnyObject, ObservableObject {
         sets: [SetInput],
         exerciseMeasurement: String,
         exerciseQuantifier: String,
-        notes: String?
+        notes: String?,
+        restDuration: Int32
     )
 
     /// Fetches a workout by its ID

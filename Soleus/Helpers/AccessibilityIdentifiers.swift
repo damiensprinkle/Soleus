@@ -19,6 +19,14 @@ enum AccessibilityID {
     // MARK: - Active Session Banner
     static let activeSessionBanner = "active_session_banner"
 
+    // MARK: - Dashboard
+    static let dashboardCustomizeButton = "dashboard_customize_button"
+    static let dashboardCustomizeDoneButton = "dashboard_customize_done_button"
+    static let dashboardResumeBanner = "dashboard_resume_banner"
+    static let dashboardLastWorkoutCard = "dashboard_last_workout_card"
+    // Per-widget toggle identifiers are generated dynamically in DashboardCustomizeView:
+    //   "widget_toggle_\(widget.rawValue)"
+
     // MARK: - Add/Edit Workout View
     static let addWorkoutCancelButton = "add_workout_cancel_button"
     static let addWorkoutSaveButton = "add_workout_save_button"
@@ -35,10 +43,27 @@ enum AccessibilityID {
 
     // MARK: - History View
     static let historyEmptyStateText = "history_empty_state_text"
-    static let historyTimePeriodMonthly = "history_time_period_monthly"
-    static let historyTimePeriodAllTime = "history_time_period_all_time"
+    static let historyModeList = "history_mode_list"
+    static let historyModeCalendar = "history_mode_calendar"
+    static let historyModeProgress = "history_mode_progress"
+    static let historyCalendarPreviousMonth = "history_calendar_previous_month"
+    static let historyCalendarNextMonth = "history_calendar_next_month"
+    static let historyCalendarMonthLabel = "history_calendar_month_label"
+    static let historyProgressSearchField = "history_progress_search_field"
+
+    // MARK: - Exercise Picker
+    static let exercisePickerSearchField = "exercise_picker_search_field"
+    static let exercisePickerCloseButton = "exercise_picker_close_button"
+    static let exercisePickerCreateCustomButton = "exercise_picker_create_custom_button"
+
+    // MARK: - My Exercises
+    static let myExercisesAddButton = "my_exercises_add_button"
+    static let myExercisesSortButton = "my_exercises_sort_button"
+    static let myExercisesNameField = "my_exercises_name_field"
+    static let myExercisesSaveButton = "my_exercises_save_button"
 
     // MARK: - Settings View
+    static let settingsMyExercisesButton = "settings_my_exercises_button"
     static let settingsHealthKitButton = "settings_health_kit_button"
     static let healthKitToggle = "health_kit_toggle"
     static let settingsWeightPicker = "settings_weight_picker"
@@ -68,6 +93,7 @@ enum AccessibilityID {
     static let startWorkoutButton = "start_workout_button"
     static let activeEditModeButton = "active_edit_mode_button"
     static let activeAddExerciseButton = "active_add_exercise_button"
+    static let keyboardDoneButton = "keyboard_done_button"
     // Per-set identifiers are generated dynamically in ExerciseRowActive:
     //   "reps_set_\(setIndex)", "weight_set_\(setIndex)", "complete_set_\(setIndex)"
     // Per-exercise identifiers are generated dynamically in ActiveWorkoutView:

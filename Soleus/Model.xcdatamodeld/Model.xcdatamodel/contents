@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="23507" systemVersion="24G84" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithSwiftData="YES" userDefinedModelVersionIdentifier="">
+    <entity name="ExerciseTemplate" representedClassName="ExerciseTemplate" syncable="YES">
+        <attribute name="category" optional="YES" attributeType="String"/>
+        <attribute name="defaultMeasurement" optional="YES" attributeType="String"/>
+        <attribute name="defaultQuantifier" optional="YES" attributeType="String"/>
+        <attribute name="descriptionText" optional="YES" attributeType="String"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isCustom" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="usageCount" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+    </entity>
     <entity name="TemporaryWorkoutDetail" representedClassName="TemporaryWorkoutDetail" syncable="YES">
+        <attribute name="restDuration" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="exerciseId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="exerciseMeasurement" optional="YES" attributeType="String"/>
         <attribute name="exerciseName" attributeType="String" defaultValueString="Bench Press"/>
@@ -15,6 +26,7 @@
     </entity>
     <entity name="WorkoutDetail" representedClassName="WorkoutDetail" syncable="YES">
         <attribute name="exerciseId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="restDuration" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="exerciseMeasurement" optional="YES" attributeType="String"/>
         <attribute name="exerciseName" attributeType="String" defaultValueString="Bench Press"/>
         <attribute name="exerciseQuantifier" optional="YES" attributeType="String"/>
