@@ -9,6 +9,7 @@ enum AccessibilityID {
     // MARK: - Workout Main View Nav Bar
     static let navReorderButton = "nav_reorder_button"
     static let navImportButton = "nav_import_button"
+    static let navScheduleButton = "nav_schedule_button"
     static let navHistoryButton = "nav_history_button"
     static let navAddWorkoutButton = "nav_add_workout_button"
 
@@ -24,8 +25,15 @@ enum AccessibilityID {
     static let dashboardCustomizeDoneButton = "dashboard_customize_done_button"
     static let dashboardResumeBanner = "dashboard_resume_banner"
     static let dashboardLastWorkoutCard = "dashboard_last_workout_card"
+    static let dashboardTodaysWorkoutCard = "dashboard_todays_workout_card"
+    static let dashboardScheduleSetupButton = "dashboard_schedule_setup_button"
     // Per-widget toggle identifiers are generated dynamically in DashboardCustomizeView:
     //   "widget_toggle_\(widget.rawValue)"
+
+    // MARK: - Weekly Schedule
+    static let scheduleBackButton = "schedule_back_button"
+    // Per-day add buttons are generated dynamically in WeeklyScheduleView:
+    //   "schedule_add_day_\(weekday)"
 
     // MARK: - Add/Edit Workout View
     static let addWorkoutCancelButton = "add_workout_cancel_button"

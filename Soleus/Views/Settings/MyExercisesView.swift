@@ -229,6 +229,9 @@ struct ExerciseEditSheet: View {
             }
             .navigationTitle(template == nil ? "New Exercise" : "Edit Exercise")
             .navigationBarTitleDisplayMode(.inline)
+            // Needed for the multiline description field — its Return key
+            // inserts a newline instead of dismissing
+            .keyboardDismissToolbar()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }

@@ -10,6 +10,7 @@ struct WorkoutTemplate {
         let distance: Float
         let exerciseQuantifier: String
         let exerciseMeasurement: String
+        let notes: String?
 
         init(
             name: String,
@@ -19,7 +20,8 @@ struct WorkoutTemplate {
             time: Int32 = 0,
             distance: Float = 0,
             exerciseQuantifier: String = "Reps",
-            exerciseMeasurement: String = "Weight"
+            exerciseMeasurement: String = "Weight",
+            notes: String? = nil
         ) {
             self.name = name
             self.sets = sets
@@ -29,6 +31,7 @@ struct WorkoutTemplate {
             self.distance = distance
             self.exerciseQuantifier = exerciseQuantifier
             self.exerciseMeasurement = exerciseMeasurement
+            self.notes = notes
         }
     }
 
@@ -54,7 +57,7 @@ struct WorkoutTemplate {
                 id: UUID(),
                 exerciseId: UUID(),
                 exerciseName: exercise.name,
-                notes: nil,
+                notes: exercise.notes,
                 orderIndex: Int32(index),
                 sets: setInputs,
                 exerciseQuantifier: exercise.exerciseQuantifier,
@@ -137,6 +140,40 @@ struct WorkoutTemplate {
             TemplateExercise(name: "Cycling",        sets: 1, time: 600, distance: 0.5,             exerciseQuantifier: "Distance", exerciseMeasurement: "Time"),
             TemplateExercise(name: "Rowing Machine", sets: 1, time: 400, distance: 0.5,             exerciseQuantifier: "Distance", exerciseMeasurement: "Time"),
             TemplateExercise(name: "Burpees",        sets: 3, reps: 12, weight: 0),
+        ]),
+        WorkoutTemplate(name: "Daily Posture & Mobility", exercises: [
+            TemplateExercise(name: "Chin Tucks", sets: 3, reps: 10,
+                notes: "Sit upright. Pull chin straight back as if making a double chin. Hold 5s each rep. Releases the suboccipitals."),
+            TemplateExercise(name: "Levator/Upper Trap Stretch", sets: 2, reps: 1, time: 30, exerciseQuantifier: "Reps", exerciseMeasurement: "Time",
+                notes: "Sit on one hand, turn head 45 degrees away, look down toward armpit. Hold 30s per side."),
+            TemplateExercise(name: "Doorway Pec Stretch", sets: 2, reps: 1, time: 30, exerciseQuantifier: "Reps", exerciseMeasurement: "Time",
+                notes: "Forearms on doorframe at 90 degrees. Step forward until chest stretches. Hold 30s."),
+            TemplateExercise(name: "Thoracic Spine Foam Rolling", sets: 1, reps: 1, time: 90, exerciseQuantifier: "Reps", exerciseMeasurement: "Time",
+                notes: "Lie back over foam roller on mid-back, support head, extend back gently."),
+        ]),
+        WorkoutTemplate(name: "Posture Day 1: Upper Back", exercises: [
+            TemplateExercise(name: "Face Pulls (Cable with Rope)", sets: 3, reps: 15, weight: 0,
+                notes: "Pull rope toward eyes, rotating knuckles back; squeeze shoulder blades down."),
+            TemplateExercise(name: "Chest-Supported Dumbbell Row", sets: 3, reps: 12, weight: 0,
+                notes: "Prevents swinging; focus on driving elbows back and pulling shoulder blades together."),
+            TemplateExercise(name: "Prone Y-T-W Raises", sets: 3, reps: 10, weight: 0,
+                notes: "On an incline bench. Use light dumbbells or bodyweight. Targets lower traps and rear delts."),
+            TemplateExercise(name: "Goblet Squat", sets: 3, reps: 10, weight: 0,
+                notes: "Drives core engagement and upright posture. Keep chest high."),
+            TemplateExercise(name: "Farmer's Carries", sets: 3, weight: 0, distance: 40, exerciseQuantifier: "Distance", exerciseMeasurement: "Weight",
+                notes: "Walk upright with heavy dumbbells. Retract shoulders without shrugging up."),
+        ]),
+        WorkoutTemplate(name: "Posture Day 2: Rear Chain", exercises: [
+            TemplateExercise(name: "Lat Pulldowns (Neutral Grip)", sets: 3, reps: 12, weight: 0,
+                notes: "Pull to upper chest; pull elbows down toward your back pockets."),
+            TemplateExercise(name: "Single-Arm Cable / Band Rows", sets: 3, reps: 12, weight: 0,
+                notes: "Focus on full extension and controlled rotation without hunching."),
+            TemplateExercise(name: "Dumbbell Romanian Deadlift", sets: 3, reps: 10, weight: 0,
+                notes: "Strengthens posterior chain. Keep shoulders set back throughout."),
+            TemplateExercise(name: "Cable External Rotations", sets: 3, reps: 15, weight: 0,
+                notes: "Keeps rotator cuff strong and counteracts rounded-forward shoulders."),
+            TemplateExercise(name: "Dead Bug or Pallof Press", sets: 3, reps: 10, weight: 0,
+                notes: "Core stability prevents lower back arching, which spills into upper posture."),
         ]),
     ]
 }

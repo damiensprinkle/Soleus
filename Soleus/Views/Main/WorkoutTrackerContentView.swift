@@ -49,6 +49,12 @@ struct WorkoutContentMainView: View {
                     .environmentObject(workoutController)
                     .transition(.slide)
 
+            case .weeklyScheduleView:
+                WeeklyScheduleView()
+                    .environmentObject(appViewModel)
+                    .environmentObject(workoutController)
+                    .transition(.slide)
+
             case .achievementsView:
                 // Achievements view is handled in CustomTabView's homeContent
                 EmptyView()
@@ -69,6 +75,8 @@ struct WorkoutContentMainView: View {
             return ""
         case .customizeCardView:
             return "Customize Card"
+        case .weeklyScheduleView: 
+            return "Weekly Schedule"
         case .achievementsView:
             return "Achievements"
         }

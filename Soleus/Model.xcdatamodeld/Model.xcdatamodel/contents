@@ -55,6 +55,7 @@
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="name" optional="YES" attributeType="String"/>
         <attribute name="orderIndex" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="scheduledDays" optional="YES" attributeType="String"/>
         <relationship name="details" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="WorkoutDetail" inverseName="workoutR" inverseEntity="WorkoutDetail"/>
         <relationship name="detailsTemp" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="TemporaryWorkoutDetail" inverseName="workoutR" inverseEntity="TemporaryWorkoutDetail"/>
         <relationship name="history" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="WorkoutHistory" inverseName="workoutR" inverseEntity="WorkoutHistory"/>

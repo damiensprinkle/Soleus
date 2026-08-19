@@ -84,6 +84,15 @@ struct WorkoutTrackerMainView: View {
                 .accessibilityIdentifier(AccessibilityID.navReorderButton)
             }
             Button(action: {
+                appViewModel.navigateTo(.weeklyScheduleView)
+            }) {
+                Image(systemName: "calendar")
+                    .help("Plan your weekly schedule")
+            }
+            .accessibilityIdentifier(AccessibilityID.navScheduleButton)
+            .disabled(isEditMode)
+            .opacity(isEditMode ? 0.5 : 1.0)
+            Button(action: {
                 appViewModel.navigateTo(.workoutHistoryView)
             }) {
                 Image(systemName: "clock")

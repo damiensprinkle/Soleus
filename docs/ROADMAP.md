@@ -39,14 +39,6 @@ These features build directly on existing infrastructure and can be shipped quic
 
 ---
 
-## Shipped ✓
-
-### iCloud Sync `Free`
-
-Workout data, history, and settings now sync automatically across all devices signed into the same iCloud account via `NSPersistentCloudKitContainer`. No login required. Data lives in the user's personal iCloud — Soleus never accesses it. Active session filtering prevents a workout started on one device from showing a spurious "Resume" banner on another device via a `deviceIdentifier` field on `WorkoutSession`.
-
----
-
 ## Tier 2 — Medium Term (High Impact, Moderate Effort)
 
 These features require new screens or data models but no external dependencies.
@@ -78,23 +70,8 @@ These features require new screens or data models but no external dependencies.
 
 ---
 
-### Customizable Dashboard `Pro`
+### Enhanced dashboard widgets will be pro features
 
-**Problem:** The Dashboard currently shows a fixed set of cards in a fixed order — Achievements, Workout Streaks, Lifetime Stats, and Personal Records. Users who care more about streaks than lifetime stats have no way to rearrange or hide cards they find less useful, and there is no way to add new data widgets as the app grows.
-
-**Solution:**
-- Allow users to add, remove, and reorder Dashboard widgets via an "Edit Dashboard" mode (similar to the iOS home screen or Health app summary)
-- Initial widget library includes the four existing cards plus new widgets to be built:
-  - **This Week** — workouts completed this week vs. a configurable weekly goal
-  - **Recent Activity** — a compact list of the last 3–5 completed workouts with date and duration
-  - **Workout Frequency** — a heatmap or bar chart showing workout days over the past 30/90 days
-  - **Cardio Summary** — total distance and cardio time for the current month
-- Widget visibility and order persisted in UserDefaults or CoreData per user
-- Default layout matches the current fixed layout so existing users see no change until they opt in to customization
-- Edit mode entered via an "Edit Dashboard" button; widgets can be toggled on/off and long-press dragged to reorder
-- New widgets can be added to the library over time without requiring a layout migration
-
----
 
 ### Workout Insights `Pro`
 
@@ -133,18 +110,6 @@ These features require new screens or data models but no external dependencies.
 
 ---
 
-### Workout Recap Shareable Card `Pro`
-
-**Problem:** Users have no way to share their workout accomplishments to social media in a polished format. A plain screenshot of the overview is unpolished.
-
-**Solution:**
-- On the Workout Overview screen, add a "Share" button that generates a styled image card
-- Card includes: workout name, date, key stats (weight lifted, reps, duration, distance), any PRs broken, and the Soleus logo/branding
-- Generated using SwiftUI's `ImageRenderer` (iOS 16+) — renders a SwiftUI view to a `UIImage` with no third-party dependencies
-- User can customize card color (tied to the workout card's existing color)
-- Image is passed to `UIActivityViewController` for sharing to any app (Instagram, Messages, Twitter, etc.)
-
----
 
 ## Tier 4 — Platform Expansion
 

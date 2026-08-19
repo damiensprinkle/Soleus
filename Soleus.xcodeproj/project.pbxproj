@@ -131,6 +131,9 @@
 		0E11AB17000000000000AA01 /* DashboardConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E11AB07000000000000AA01 /* DashboardConfig.swift */; };
 		0E11AB18000000000000AA01 /* DashboardCustomizeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E11AB08000000000000AA01 /* DashboardCustomizeView.swift */; };
 		0E11AB19000000000000AA01 /* DashboardConfigTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E11AB09000000000000AA01 /* DashboardConfigTests.swift */; };
+		0E11AB1A000000000000AA01 /* WorkoutSchedule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E11AB0A000000000000AA01 /* WorkoutSchedule.swift */; };
+		0E11AB1B000000000000AA01 /* WeeklyScheduleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E11AB0B000000000000AA01 /* WeeklyScheduleView.swift */; };
+		0E11AB1C000000000000AA01 /* WorkoutScheduleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E11AB0C000000000000AA01 /* WorkoutScheduleTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -291,6 +294,9 @@
 		0E11AB07000000000000AA01 /* DashboardConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DashboardConfig.swift"; sourceTree = "<group>"; };
 		0E11AB08000000000000AA01 /* DashboardCustomizeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DashboardCustomizeView.swift"; sourceTree = "<group>"; };
 		0E11AB09000000000000AA01 /* DashboardConfigTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DashboardConfigTests.swift"; sourceTree = "<group>"; };
+		0E11AB0A000000000000AA01 /* WorkoutSchedule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkoutSchedule.swift"; sourceTree = "<group>"; };
+		0E11AB0B000000000000AA01 /* WeeklyScheduleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WeeklyScheduleView.swift"; sourceTree = "<group>"; };
+		0E11AB0C000000000000AA01 /* WorkoutScheduleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkoutScheduleTests.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -416,6 +422,7 @@
 			children = (
 				0E11AB06000000000000AA01 /* ExerciseLibraryManagerTests.swift */,
 				0E11AB09000000000000AA01 /* DashboardConfigTests.swift */,
+				0E11AB0C000000000000AA01 /* WorkoutScheduleTests.swift */,
 				08C5DFCB2F6CB70500FC40DB /* ActiveWorkoutSaveTests.swift */,
 				088B576F2EC3A1C00066CC17 /* Mocks */,
 				088B57702EC3A1C00066CC17 /* README.md */,
@@ -507,6 +514,7 @@
 			children = (
 				0CA10010300000000000AA01 /* AccessibilityIdentifiers.swift */,
 				0E11AB07000000000000AA01 /* DashboardConfig.swift */,
+				0E11AB0A000000000000AA01 /* WorkoutSchedule.swift */,
 				08A2EC0B2ED6443900B60FF9 /* LogCapture.swift */,
 				0828683E2CE7E13500835C08 /* ExerciseInputHelper.swift */,
 				08B3CFE92B7E9FA6002F5C92 /* TimeHelper.swift */,
@@ -624,6 +632,7 @@
 				A3000002300000000000AA01 /* WorkoutSummaryShareCard.swift */,
 				08B3CF842B7C1D84002F5C92 /* ActiveWorkoutView.swift */,
 				08B3CFEB2B80227E002F5C92 /* WorkoutHistoryView.swift */,
+				0E11AB0B000000000000AA01 /* WeeklyScheduleView.swift */,
 			);
 			path = WorkoutTracker;
 			sourceTree = "<group>";
@@ -845,6 +854,8 @@
 				081DD5982ECA1A7900B4074D /* DashboardView.swift in Sources */,
 				0E11AB17000000000000AA01 /* DashboardConfig.swift in Sources */,
 				0E11AB18000000000000AA01 /* DashboardCustomizeView.swift in Sources */,
+				0E11AB1A000000000000AA01 /* WorkoutSchedule.swift in Sources */,
+				0E11AB1B000000000000AA01 /* WeeklyScheduleView.swift in Sources */,
 				081DD5892EC511AB00B4074D /* ShareableWorkout.swift in Sources */,
 				0847535F2CE3D59B00C6A7F9 /* WorkoutSessionModel.swift in Sources */,
 				08C31FFF2B82EA3A002EE8A7 /* PersistenceController.swift in Sources */,
@@ -922,6 +933,7 @@
 			files = (
 				0E11AB16000000000000AA01 /* ExerciseLibraryManagerTests.swift in Sources */,
 				0E11AB19000000000000AA01 /* DashboardConfigTests.swift in Sources */,
+				0E11AB1C000000000000AA01 /* WorkoutScheduleTests.swift in Sources */,
 				088B57732EC3A1C00066CC17 /* WorkoutTrackerControllerTests.swift in Sources */,
 				088B57742EC3A1C00066CC17 /* MockWorkoutManager.swift in Sources */,
 				0CA10020300000000000AA01 /* TimeHelperTests.swift in Sources */,

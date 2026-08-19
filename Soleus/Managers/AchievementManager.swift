@@ -211,9 +211,12 @@ class AchievementManager: ObservableObject {
                 }
             }
 
-            // Calculate streaks
+            // Calculate streaks. With a weekly schedule, unscheduled rest days
+            // don't break a streak — only missing a scheduled day does. Without
+            // a schedule, only consecutive days count (legacy behavior).
             if !histories.isEmpty {
                 let calendar = Calendar.current
+                let scheduledWeekdays = fetchScheduledWeekdays(context: context)
                 var streak = 1
                 var previousDate = histories[0].workoutDate
 
@@ -222,22 +225,32 @@ class AchievementManager: ObservableObject {
                        let previous = previousDate {
                         let daysBetween = calendar.dateComponents([.day], from: calendar.startOfDay(for: previous), to: calendar.startOfDay(for: current)).day ?? 0
 
-                        if daysBetween == 1 {
-                            streak += 1
-                        } else if daysBetween > 1 {
-                            longestStreak = max(longestStreak, streak)
-                            streak = 1
+                        if daysBetween >= 1 {
+                            if missedScheduledDay(between: previous, and: current, scheduledWeekdays: scheduledWeekdays, calendar: calendar) {
+                                longestStreak = max(longestStreak, streak)
+                                streak = 1
+                            } else {
+                                streak += 1
+                            }
                         }
                     }
                     previousDate = histories[i].workoutDate
                 }
                 longestStreak = max(longestStreak, streak)
 
-                // Check current streak
+                // Check current streak. Today never counts as missed while it's
+                // still in progress.
                 if let lastWorkoutDate = histories.last?.workoutDate {
                     let daysSinceLastWorkout = calendar.dateComponents([.day], from: calendar.startOfDay(for: lastWorkoutDate), to: calendar.startOfDay(for: Date())).day ?? 0
-                    currentStreak = daysSinceLastWorkout <= 1 ? streak : 0
                     workedOutToday = daysSinceLastWorkout == 0
+
+                    if daysSinceLastWorkout <= 1 {
+                        currentStreak = streak
+                    } else if !missedScheduledDay(between: lastWorkoutDate, and: Date(), scheduledWeekdays: scheduledWeekdays, calendar: calendar) {
+                        currentStreak = streak
+                    } else {
+                        currentStreak = 0
+                    }
                 }
             }
 
@@ -264,6 +277,35 @@ class AchievementManager: ObservableObject {
             AppLogger.workout.error("Failed to fetch workout history: \(error)")
             return WorkoutStats()
         }
+    }
+
+    /// Union of every workout's scheduled weekdays (1 = Sunday … 7 = Saturday).
+    private func fetchScheduledWeekdays(context: NSManagedObjectContext) -> Set<Int> {
+        let request = NSFetchRequest<Workouts>(entityName: "Workouts")
+        request.predicate = NSPredicate(format: "scheduledDays != nil")
+        guard let workouts = try? context.fetch(request) else { return [] }
+        return workouts.reduce(into: Set<Int>()) { $0.formUnion(WorkoutSchedule.parse($1.scheduledDays)) }
+    }
+
+    /// True when a scheduled training day falls strictly between the two dates
+    /// (so neither endpoint counts). Without a schedule, any multi-day gap
+    /// counts as a miss, preserving the consecutive-day streak rule.
+    private func missedScheduledDay(between start: Date, and end: Date, scheduledWeekdays: Set<Int>, calendar: Calendar) -> Bool {
+        let startDay = calendar.startOfDay(for: start)
+        let endDay = calendar.startOfDay(for: end)
+        let gap = calendar.dateComponents([.day], from: startDay, to: endDay).day ?? 0
+        guard gap > 1 else { return false }
+        guard !scheduledWeekdays.isEmpty else { return true }
+
+        // Any 7 consecutive days cover every weekday, so checking the first 7
+        // in-between days is enough for arbitrarily long gaps.
+        for offset in 1..<min(gap, 8) {
+            if let day = calendar.date(byAdding: .day, value: offset, to: startDay),
+               scheduledWeekdays.contains(calendar.component(.weekday, from: day)) {
+                return true
+            }
+        }
+        return false
     }
 
     private func parseTimeString(_ timeString: String) -> Double {

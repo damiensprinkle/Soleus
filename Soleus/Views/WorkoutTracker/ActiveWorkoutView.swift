@@ -114,21 +114,7 @@ struct ActiveWorkoutView: View {
                         }
                         .scrollContentBackground(.hidden)
                         .scrollDismissesKeyboard(.immediately)
-                        // Single keyboard toolbar for all set fields — per-row
-                        // ToolbarItems inside a Form don't render reliably
-                        .toolbar {
-                            ToolbarItemGroup(placement: .keyboard) {
-                                if focusManager.isAnyTextFieldFocused {
-                                    Spacer()
-                                    Button(action: dismissKeyboard) {
-                                        Image(systemName: "checkmark")
-                                            .fontWeight(.semibold)
-                                    }
-                                    .accessibilityLabel("Done")
-                                    .accessibilityIdentifier(AccessibilityID.keyboardDoneButton)
-                                }
-                            }
-                        }
+                        .keyboardDismissToolbar()
                         .onChange(of: editingNotesIndex) {
                             guard let index = editingNotesIndex else { return }
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
@@ -146,7 +132,9 @@ struct ActiveWorkoutView: View {
 
                     Spacer()
 
-                    if !isNotesFocused {
+                    // Hidden while any keyboard is up so it doesn't sit above
+                    // the keyboard and eat the remaining screen space
+                    if !isNotesFocused && !isRenameFocused && !focusManager.isAnyTextFieldFocused {
                         startWorkoutButton
                             .padding(.top)
                         Spacer()
@@ -326,13 +314,6 @@ struct ActiveWorkoutView: View {
                             .onChange(of: isRenameFocused) {
                                 if !isRenameFocused { commitRename(for: index) }
                             }
-                            .toolbar {
-                                ToolbarItem(placement: .keyboard) {
-                                    if isRenameFocused {
-                                        Button("Done") { commitRename(for: index) }
-                                    }
-                                }
-                            }
                     } else {
                         Text(workoutController.workoutDetails[index].exerciseName)
                             .font(.title2)
@@ -458,13 +439,6 @@ struct ActiveWorkoutView: View {
                         }
                         .onChange(of: isNotesFocused) {
                             if !isNotesFocused { commitActiveNotes(for: index) }
-                        }
-                        .toolbar {
-                            ToolbarItem(placement: .keyboard) {
-                                if isNotesFocused {
-                                    Button("Done") { commitActiveNotes(for: index) }
-                                }
-                            }
                         }
                     Color.clear.frame(height: 24).id("notesAnchor_\(index)")
                 } else if let notes = workoutController.workoutDetails[index].notes, !notes.isEmpty {

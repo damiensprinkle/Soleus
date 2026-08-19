@@ -68,6 +68,7 @@ enum ContentViewType {
     case workoutActiveView(UUID)
     case workoutHistoryView
     case customizeCardView(UUID)
+    case weeklyScheduleView
 }
 ```
 
@@ -78,8 +79,8 @@ All navigation happens through `appViewModel.navigateTo()`. The `WorkoutContentM
 ```
 HomeView (root)
 └── CustomTabView
-    ├── DashboardView (widget cards: this week, last workout, achievements,
-    │   streaks, lifetime stats, PRs — user can toggle/reorder via
+    ├── DashboardView (widget cards: today's workout, this week, last workout,
+    │   achievements, streaks, lifetime stats, PRs — user can toggle/reorder via
     │   DashboardCustomizeView sheet; config persisted by DashboardConfigStore)
     ├── WorkoutContentMainView
     │   └── NavigationView wraps switch statement:
@@ -87,6 +88,7 @@ HomeView (root)
     │       ├── ActiveWorkoutView (workout in progress)
     │       ├── WorkoutOverviewView (completion summary)
     │       ├── WorkoutHistoryView (past workouts)
+    │       ├── WeeklyScheduleView (assign workouts to weekdays)
     │       └── CustomizeCardView (color picker)
     └── SettingsView
         ├── DocumentPicker (sheet) → ImportWorkoutPreviewView
@@ -160,6 +162,14 @@ CoreData context is injected separately:
 - Validation in controller before persistence
 - Result<Void, WorkoutSaveError> pattern for error handling
 
+### Weekly Workout Schedule
+
+- Users assign workout templates to weekdays in `WeeklyScheduleView` (calendar icon in the workout tab nav bar, or "Edit"/"Set Up Schedule" on the dashboard's Today's Workout widget)
+- Stored as `Workouts.scheduledDays` — an optional comma-separated string of Calendar weekday numbers (1 = Sunday … 7 = Saturday), parsed/serialized by the `WorkoutSchedule` helper; no separate entity
+- `WorkoutManager` schedule APIs: `scheduledDays(for:)`, `setScheduledDays(_:for:)`, `weeklySchedule()`, `completedWorkoutIds(on:)` (all on the `WorkoutManaging` protocol)
+- The dashboard `todaysWorkout` widget shows today's scheduled workouts with quick-start/resume buttons, a "Done" state once completed, a rest-day message when a schedule exists but today is unscheduled, and a setup prompt when no schedule exists
+- **Streak integration** (`AchievementManager`): when any schedule exists, unscheduled rest days no longer break streaks — only missing a scheduled day does (today doesn't count as missed while in progress). Without a schedule, the legacy consecutive-day rule applies.
+
 ### Workout Import/Export
 
 - `ShareableWorkout` is the codable transfer object. Native `.soleus` files are 4-byte magic header (`SLSE`) + zlib-compressed JSON. Generic `.json` files are also accepted via a lenient secondary decode path (`GenericWorkoutJSON`) that defaults missing fields.
@@ -217,8 +227,9 @@ One-shot tooltips/hints use `@AppStorage("hasSeen<Name>Hint")` flags, default `f
 - `hasSeenLongPressTooltip` — long-press affordance on workout cards (`WorkoutTrackerMainView`)
 - `hasSeenSetToggleHint` — explains the green completion toggle on first active workout (`ActiveWorkoutView`)
 - `hasSeenRestTimerHint` — explains the rest timer controls the first time it appears (`ActiveWorkoutView`)
+- `hasSeenDashboardHint` — welcome banner on first dashboard view; tap opens the customize sheet (`DashboardView`)
 
-All three are pre-set to `true` during UI testing (`SoleusApp.init`) so they don't block automation, and all three are individually resettable + reset-all from `DevMenuView`. New hints should follow this pattern and use the shared `firstTimeHint(icon:title:subtitle:onDismiss:)` ViewBuilder in `ActiveWorkoutView` for style consistency.
+All of these are pre-set to `true` during UI testing (`SoleusApp.init`) so they don't block automation, and all are individually resettable + reset-all from `DevMenuView`. New hints should follow this pattern and use the shared `firstTimeHint(icon:title:subtitle:onDismiss:)` ViewBuilder in `ActiveWorkoutView` for style consistency.
 
 ### Input Validation
 - Regex patterns for form validation

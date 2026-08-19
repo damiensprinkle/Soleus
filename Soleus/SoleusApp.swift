@@ -45,6 +45,7 @@ struct SoleusApp: App {
             UserDefaults.standard.set(true, forKey: "hasSeenLongPressTooltip")
             UserDefaults.standard.set(true, forKey: "hasSeenSetToggleHint")
             UserDefaults.standard.set(true, forKey: "hasSeenRestTimerHint")
+            UserDefaults.standard.set(true, forKey: "hasSeenDashboardHint")
             // The UI-test store is in-memory, so force a fresh library seed each launch
             UserDefaults.standard.removeObject(forKey: "hasSeededExerciseLibrary")
             let currentVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""

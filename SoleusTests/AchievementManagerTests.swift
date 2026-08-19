@@ -24,6 +24,11 @@ final class AchievementManagerTests: XCTestCase {
             histories.forEach { context.delete($0) }
             try? context.save()
         }
+        let workoutRequest: NSFetchRequest<Workouts> = Workouts.fetchRequest()
+        if let workouts = try? context.fetch(workoutRequest) {
+            workouts.forEach { context.delete($0) }
+            try? context.save()
+        }
         UserDefaults.standard.removeObject(forKey: "unlockedAchievements")
         sut = nil
         workoutManager = nil
@@ -767,6 +772,77 @@ final class AchievementManagerTests: XCTestCase {
         let progress = sut.getAchievementProgress()
 
         XCTAssertEqual(progress[0].progressPercentage, 0.0)
+    }
+
+    // MARK: - Scheduled Streaks
+
+    /// Creates a workout scheduled on the weekdays of the given dates.
+    private func makeScheduledWorkout(onWeekdaysOf dates: [Date]) {
+        let calendar = Calendar.current
+        let weekdays = Set(dates.map { calendar.component(.weekday, from: $0) })
+        let workout = Workouts(context: context)
+        workout.id = UUID()
+        workout.name = "Scheduled Workout"
+        workout.orderIndex = 0
+        workout.scheduledDays = WorkoutSchedule.serialize(weekdays)
+        try? context.save()
+    }
+
+    private func daysAgo(_ days: Int) -> Date {
+        Calendar.current.date(byAdding: .day, value: -days, to: Calendar.current.startOfDay(for: Date()))!
+    }
+
+    func testStreak_WithSchedule_UnscheduledRestDayDoesNotBreakStreak() {
+        // Worked out 2 days ago and today; the rest day in between is unscheduled
+        makeHistory(workoutDate: daysAgo(2))
+        makeHistory(workoutDate: daysAgo(0))
+        makeScheduledWorkout(onWeekdaysOf: [daysAgo(2), daysAgo(0)])
+
+        let stats = sut.getWorkoutStats()
+
+        XCTAssertEqual(stats.currentStreak, 2)
+        XCTAssertEqual(stats.longestStreak, 2)
+    }
+
+    func testStreak_WithSchedule_MissedScheduledDayBreaksStreak() {
+        // The day in between was scheduled but skipped
+        makeHistory(workoutDate: daysAgo(2))
+        makeHistory(workoutDate: daysAgo(0))
+        makeScheduledWorkout(onWeekdaysOf: [daysAgo(1)])
+
+        let stats = sut.getWorkoutStats()
+
+        XCTAssertEqual(stats.currentStreak, 1)
+    }
+
+    func testCurrentStreak_WithSchedule_SurvivesRestDaysSinceLastWorkout() {
+        // Last workout 2 days ago; yesterday was unscheduled and today's
+        // scheduled workout isn't missed while the day is still in progress
+        makeHistory(workoutDate: daysAgo(2))
+        makeScheduledWorkout(onWeekdaysOf: [daysAgo(2), daysAgo(0)])
+
+        let stats = sut.getWorkoutStats()
+
+        XCTAssertEqual(stats.currentStreak, 1)
+    }
+
+    func testCurrentStreak_WithSchedule_ZeroAfterMissingScheduledDay() {
+        makeHistory(workoutDate: daysAgo(3))
+        makeScheduledWorkout(onWeekdaysOf: [daysAgo(2)])
+
+        let stats = sut.getWorkoutStats()
+
+        XCTAssertEqual(stats.currentStreak, 0)
+    }
+
+    func testStreak_WithoutSchedule_GapStillBreaksStreak() {
+        // Legacy behavior preserved when no schedule exists
+        makeHistory(workoutDate: daysAgo(2))
+        makeHistory(workoutDate: daysAgo(0))
+
+        let stats = sut.getWorkoutStats()
+
+        XCTAssertEqual(stats.currentStreak, 1)
     }
 
     // MARK: - getWorkoutStats

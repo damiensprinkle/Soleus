@@ -54,6 +54,36 @@ class MockWorkoutManager: ObservableObject, WorkoutManaging {
         self.workouts = workouts
     }
 
+    // MARK: - Weekly Schedule
+
+    private var storedSchedules: [UUID: Set<Int>] = [:]
+
+    func scheduledDays(for workoutId: UUID) -> Set<Int> {
+        return storedSchedules[workoutId] ?? []
+    }
+
+    func setScheduledDays(_ days: Set<Int>, for workoutId: UUID) {
+        if days.isEmpty {
+            storedSchedules.removeValue(forKey: workoutId)
+        } else {
+            storedSchedules[workoutId] = days
+        }
+    }
+
+    func weeklySchedule() -> [Int: [WorkoutInfo]] {
+        var schedule: [Int: [WorkoutInfo]] = [:]
+        for workout in workouts {
+            for day in storedSchedules[workout.id] ?? [] {
+                schedule[day, default: []].append(workout)
+            }
+        }
+        return schedule
+    }
+
+    func completedWorkoutIds(on date: Date) -> Set<UUID> {
+        return []
+    }
+
     func updateExerciseNotesDuringActiveWorkout(workoutId: UUID, exerciseId: UUID, notes: String?) {
         // Mock implementation - in real implementation this would update CoreData
         // For testing purposes, this is a no-op

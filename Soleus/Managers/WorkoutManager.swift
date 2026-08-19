@@ -376,6 +376,70 @@ class WorkoutManager: ObservableObject, WorkoutManaging {
         }
     }
     
+    // MARK: - Weekly Schedule
+
+    func scheduledDays(for workoutId: UUID) -> Set<Int> {
+        guard let workout = fetchWorkoutById(for: workoutId) else { return [] }
+        return WorkoutSchedule.parse(workout.scheduledDays)
+    }
+
+    func setScheduledDays(_ days: Set<Int>, for workoutId: UUID) {
+        guard let workout = fetchWorkoutById(for: workoutId) else {
+            AppLogger.workout.warning("Cannot schedule workout: no workout found for id \(workoutId)")
+            return
+        }
+        workout.scheduledDays = WorkoutSchedule.serialize(days)
+
+        if case .failure(let error) = saveContext() {
+            AppLogger.coreData.error("Error saving workout schedule: \(error.localizedDescription)")
+            errorHandler?.handle(error)
+        }
+    }
+
+    /// All scheduled workouts keyed by Calendar weekday number (1 = Sunday … 7 = Saturday).
+    /// Workouts within a day keep the card grid's orderIndex order.
+    func weeklySchedule() -> [Int: [WorkoutInfo]] {
+        guard let context = self.context else { return [:] }
+
+        let request = NSFetchRequest<Workouts>(entityName: "Workouts")
+        request.predicate = NSPredicate(format: "scheduledDays != nil")
+        request.sortDescriptors = [NSSortDescriptor(key: "orderIndex", ascending: true)]
+
+        var schedule: [Int: [WorkoutInfo]] = [:]
+        do {
+            for workout in try context.fetch(request) {
+                guard let id = workout.id, let name = workout.name else { continue }
+                for day in WorkoutSchedule.parse(workout.scheduledDays) {
+                    schedule[day, default: []].append(WorkoutInfo(id: id, name: name))
+                }
+            }
+        } catch {
+            AppLogger.coreData.error("Failed to fetch weekly schedule: \(error.localizedDescription)")
+            errorHandler?.handle(.fetchFailed(error))
+        }
+        return schedule
+    }
+
+    /// IDs of workouts that have a history entry on the given calendar day.
+    func completedWorkoutIds(on date: Date) -> Set<UUID> {
+        guard let context = self.context else { return [] }
+
+        let calendar = Calendar.current
+        let dayStart = calendar.startOfDay(for: date)
+        guard let dayEnd = calendar.date(byAdding: .day, value: 1, to: dayStart) else { return [] }
+
+        let request: NSFetchRequest<WorkoutHistory> = WorkoutHistory.fetchRequest()
+        request.predicate = NSPredicate(format: "workoutDate >= %@ AND workoutDate < %@", dayStart as NSDate, dayEnd as NSDate)
+
+        do {
+            let histories = try context.fetch(request)
+            return Set(histories.compactMap { $0.workoutR?.id })
+        } catch {
+            AppLogger.coreData.error("Failed to fetch completed workouts for day: \(error.localizedDescription)")
+            return []
+        }
+    }
+
     func duplicateWorkout(originalWorkoutId: UUID, completion: (() -> Void)? = nil) {
         guard let backgroundContext = createBackgroundContext() else {
             AppLogger.coreData.error("Failed to create background context")

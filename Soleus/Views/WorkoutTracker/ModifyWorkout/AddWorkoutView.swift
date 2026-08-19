@@ -151,6 +151,7 @@ struct AddWorkoutView: View {
             }
             .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
                 focusManager.isAnyTextFieldFocused = false
+                focusManager.currentlyFocusedField = nil
             }
             .onAppear {
                 guard !hasLoaded else { return }
@@ -360,6 +361,7 @@ struct AddWorkoutView: View {
                 .padding(.vertical, 8)
             }
             .scrollDismissesKeyboard(.immediately)
+            .keyboardDismissToolbar()
             .onScrollGeometryChange(for: Int.self) { Int($0.contentOffset.y / 10) } action: { _, _ in
                 swipeResetToken += 1
             }
@@ -427,12 +429,8 @@ struct AddWorkoutView: View {
                                         editingName = String(editingName.prefix(30))
                                     }
                                 }
-                                .toolbar {
-                                    ToolbarItem(placement: .keyboard) {
-                                        if isRenameFocused {
-                                            Button("Done") { commitRename() }
-                                        }
-                                    }
+                                .onChange(of: isRenameFocused) {
+                                    if !isRenameFocused { commitRename() }
                                 }
                         } else {
                             Text(exerciseName)
@@ -546,13 +544,6 @@ struct AddWorkoutView: View {
                             }
                             .onChange(of: isNotesFocused) {
                                 if !isNotesFocused { commitNotes() }
-                            }
-                            .toolbar {
-                                ToolbarItem(placement: .keyboard) {
-                                    if isNotesFocused {
-                                        Button("Done") { commitNotes() }
-                                    }
-                                }
                             }
                     } else if let notes = notes, !notes.isEmpty {
                         HStack(alignment: .top, spacing: 8) {

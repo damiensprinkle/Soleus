@@ -9,6 +9,7 @@ enum TestID {
     // MARK: - Workout Main View Nav Bar
     static let navReorderButton = "nav_reorder_button"
     static let navImportButton = "nav_import_button"
+    static let navScheduleButton = "nav_schedule_button"
     static let navHistoryButton = "nav_history_button"
     static let navAddWorkoutButton = "nav_add_workout_button"
 
@@ -24,7 +25,13 @@ enum TestID {
     static let dashboardCustomizeDoneButton = "dashboard_customize_done_button"
     static let dashboardResumeBanner = "dashboard_resume_banner"
     static let dashboardLastWorkoutCard = "dashboard_last_workout_card"
+    static let dashboardTodaysWorkoutCard = "dashboard_todays_workout_card"
+    static let dashboardScheduleSetupButton = "dashboard_schedule_setup_button"
     static func widgetToggle(_ widgetRawValue: String) -> String { "widget_toggle_\(widgetRawValue)" }
+
+    // MARK: - Weekly Schedule
+    static let scheduleBackButton = "schedule_back_button"
+    static func scheduleAddDay(_ weekday: Int) -> String { "schedule_add_day_\(weekday)" }
 
     // MARK: - Add/Edit Workout View
     static let addWorkoutCancelButton = "add_workout_cancel_button"

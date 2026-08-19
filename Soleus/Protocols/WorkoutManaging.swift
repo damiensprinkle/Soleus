@@ -57,6 +57,20 @@ protocol WorkoutManaging: AnyObject, ObservableObject {
     /// Saves the order of workouts by updating their orderIndex values
     func saveWorkoutOrder(workouts: [WorkoutInfo])
 
+    // MARK: - Weekly Schedule
+
+    /// The Calendar weekday numbers (1 = Sunday … 7 = Saturday) a workout is scheduled on
+    func scheduledDays(for workoutId: UUID) -> Set<Int>
+
+    /// Replaces the scheduled weekdays for a workout
+    func setScheduledDays(_ days: Set<Int>, for workoutId: UUID)
+
+    /// All scheduled workouts keyed by Calendar weekday number
+    func weeklySchedule() -> [Int: [WorkoutInfo]]
+
+    /// IDs of workouts completed (history entry exists) on the given calendar day
+    func completedWorkoutIds(on date: Date) -> Set<UUID>
+
     // MARK: - Active Workout / Temporary Data Management
 
     /// Saves or updates sets during an active workout

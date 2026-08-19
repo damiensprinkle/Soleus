@@ -183,38 +183,6 @@ struct ExerciseRow: View {
                     .frame(width: 100, height: 20)
             }
         }
-        .toolbar {
-            ToolbarItem(placement: .keyboard) {
-                if(focusedField == .time){
-                    Button("Done") {
-                        focusedField = nil
-                        focusManager.isAnyTextFieldFocused = false
-                        focusManager.currentlyFocusedField = nil
-                    }
-                }
-                if(focusedField == .distance) {
-                    Button("Done") {
-                        focusedField = nil
-                        focusManager.isAnyTextFieldFocused = false
-                        focusManager.currentlyFocusedField = nil
-                    }
-                }
-                if(focusedField == .weight){
-                    Button("Done") {
-                        focusedField = nil
-                        focusManager.isAnyTextFieldFocused = false
-                        focusManager.currentlyFocusedField = nil
-                    }
-                }
-                if(focusedField == .reps) {
-                    Button("Done") {
-                        focusedField = nil
-                        focusManager.isAnyTextFieldFocused = false
-                        focusManager.currentlyFocusedField = nil
-                    }
-                }
-            }
-        }
     }
     
     private func formatInput(_ newValue: String) {

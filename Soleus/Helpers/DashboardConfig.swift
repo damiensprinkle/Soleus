@@ -3,6 +3,7 @@ import Foundation
 /// The widgets that can appear on the dashboard. Raw values are persisted in
 /// UserDefaults, so existing cases must never be renamed.
 enum DashboardWidget: String, CaseIterable, Codable, Identifiable {
+    case todaysWorkout
     case thisWeek
     case lastWorkout
     case achievements
@@ -14,6 +15,7 @@ enum DashboardWidget: String, CaseIterable, Codable, Identifiable {
 
     var displayName: String {
         switch self {
+        case .todaysWorkout: return "Today's Workout"
         case .thisWeek: return "This Week"
         case .lastWorkout: return "Last Workout"
         case .achievements: return "Achievements"
@@ -25,6 +27,7 @@ enum DashboardWidget: String, CaseIterable, Codable, Identifiable {
 
     var icon: String {
         switch self {
+        case .todaysWorkout: return "calendar.badge.clock"
         case .thisWeek: return "calendar"
         case .lastWorkout: return "clock.arrow.circlepath"
         case .achievements: return "trophy.fill"

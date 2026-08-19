@@ -133,6 +133,23 @@ struct DevMenuView: View {
                     }
 
                     Button(action: {
+                        UserDefaults.standard.removeObject(forKey: "hasSeenDashboardHint")
+                        statusMessage = "Dashboard hint reset"
+                    }) {
+                        HStack {
+                            Image(systemName: "square.grid.2x2.fill")
+                                .foregroundColor(.orange)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Reset Dashboard Hint")
+                                    .foregroundColor(.primary)
+                                Text("Shows the dashboard welcome card again")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    }
+
+                    Button(action: {
                         UserDefaults.standard.removeObject(forKey: "lastSeenVersion")
                         statusMessage = "Release notes reset"
                     }) {
@@ -153,6 +170,7 @@ struct DevMenuView: View {
                         UserDefaults.standard.removeObject(forKey: "hasSeenLongPressTooltip")
                         UserDefaults.standard.removeObject(forKey: "hasSeenSetToggleHint")
                         UserDefaults.standard.removeObject(forKey: "hasSeenRestTimerHint")
+                        UserDefaults.standard.removeObject(forKey: "hasSeenDashboardHint")
                         UserDefaults.standard.removeObject(forKey: "lastSeenVersion")
                         statusMessage = "All app state reset"
                     }) {

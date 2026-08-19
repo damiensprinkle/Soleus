@@ -2,6 +2,7 @@ import SwiftUI
 
 struct CustomTabView: View {
     @State private var selectedTab: Tab = .workout
+    @State private var isKeyboardVisible = false
     @EnvironmentObject var appViewModel: AppViewModel
     @EnvironmentObject var workoutController: WorkoutTrackerViewModel
 
@@ -18,36 +19,47 @@ struct CustomTabView: View {
                     .navigationBarTitleDisplayMode(.inline)
                     .id(selectedTab)
 
-                Divider()
+                // Hidden while the keyboard is up — otherwise the keyboard
+                // pushes the bar above itself and wastes screen space
+                if !isKeyboardVisible {
+                    Divider()
 
-                HStack {
-                    tabButton(for: .workout, systemImage: "dumbbell.fill")
-                        .accessibilityIdentifier(AccessibilityID.tabWorkout)
+                    HStack {
+                        tabButton(for: .workout, systemImage: "dumbbell.fill")
+                            .accessibilityIdentifier(AccessibilityID.tabWorkout)
 
-                    Spacer()
-                    tabButton(for: .dashboard, systemImage: "chart.bar.fill")
-                        .accessibilityIdentifier(AccessibilityID.tabDashboard)
+                        Spacer()
+                        tabButton(for: .dashboard, systemImage: "chart.bar.fill")
+                            .accessibilityIdentifier(AccessibilityID.tabDashboard)
 
-                    Spacer()
-                    tabButton(for: .settings, systemImage :"gearshape")
-                        .accessibilityIdentifier(AccessibilityID.tabSettings)
+                        Spacer()
+                        tabButton(for: .settings, systemImage :"gearshape")
+                            .accessibilityIdentifier(AccessibilityID.tabSettings)
+                    }
+                    .padding()
+                    .background(
+                        Color("MyGrey").opacity(0.1)
+                            .ignoresSafeArea(.all, edges: .bottom)
+                    )
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
-                .padding()
-                .background(
-                    Color("MyGrey").opacity(0.1)
-                        .ignoresSafeArea(.all, edges: .bottom)
-                )
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .navigationViewStyle(.stack)
         .ignoresSafeArea(.keyboard)
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
+            withAnimation(.easeOut(duration: 0.25)) { isKeyboardVisible = true }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
+            withAnimation(.easeOut(duration: 0.25)) { isKeyboardVisible = false }
+        }
         .onChange(of: appViewModel.currentView) { _, newView in
             // Dashboard widgets can navigate into workout-flow views (resume
             // banner, last-workout card). Those render inside the workout tab,
             // so follow the navigation there.
             switch newView {
-            case .workoutActiveView, .workoutHistoryView, .workoutOverview, .customizeCardView:
+            case .workoutActiveView, .workoutHistoryView, .workoutOverview, .customizeCardView, .weeklyScheduleView:
                 if selectedTab != .workout {
                     selectedTab = .workout
                 }

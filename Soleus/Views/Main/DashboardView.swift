@@ -7,11 +7,15 @@ struct DashboardView: View {
 
     @AppStorage("weightPreference") private var weightPreference: String = "Lbs"
     @AppStorage("distancePreference") private var distancePreference: String = "mile"
+    @AppStorage("hasSeenDashboardHint") private var hasSeenDashboardHint: Bool = false
 
     @State private var lifeStats: WorkoutStats?
     @State private var personalRecords: PersonalRecords?
     @State private var workoutDaysThisWeek: Set<Date> = []
     @State private var lastWorkout: WorkoutHistory?
+    @State private var todaysScheduledWorkouts: [WorkoutInfo] = []
+    @State private var completedTodayIds: Set<UUID> = []
+    @State private var hasAnySchedule = false
     @State private var widgetSettings: [DashboardWidgetSetting] = DashboardConfigStore.load()
     @State private var showCustomizeSheet = false
 
@@ -19,6 +23,10 @@ struct DashboardView: View {
         ScrollView {
             VStack(spacing: 16) {
                 Divider()
+
+                if !hasSeenDashboardHint {
+                    dashboardHintCard
+                }
 
                 if workoutController.hasActiveSession, let workoutId = workoutController.activeWorkoutId {
                     resumeWorkoutBanner(workoutId: workoutId)
@@ -57,11 +65,19 @@ struct DashboardView: View {
         workoutDaysThisWeek = achievementManager.getWorkoutDaysThisWeek()
         lastWorkout = achievementManager.getMostRecentWorkout()
         widgetSettings = DashboardConfigStore.load()
+
+        let schedule = workoutController.workoutManager.weeklySchedule()
+        hasAnySchedule = !schedule.isEmpty
+        let todayWeekday = Calendar.current.component(.weekday, from: Date())
+        todaysScheduledWorkouts = schedule[todayWeekday] ?? []
+        completedTodayIds = workoutController.workoutManager.completedWorkoutIds(on: Date())
     }
 
     @ViewBuilder
     private func widgetView(for widget: DashboardWidget) -> some View {
         switch widget {
+        case .todaysWorkout:
+            todaysWorkoutCard
         case .thisWeek:
             thisWeekCard
         case .lastWorkout:
@@ -75,6 +91,62 @@ struct DashboardView: View {
         case .personalRecords:
             personalRecordsCard
         }
+    }
+
+    // MARK: - First-Time Hint Card
+
+    private var dashboardHintCard: some View {
+        ZStack(alignment: .trailing) {
+            Button(action: {
+                hasSeenDashboardHint = true
+                showCustomizeSheet = true
+            }) {
+                HStack(spacing: 12) {
+                    Image(systemName: "square.grid.2x2.fill")
+                        .font(.title2)
+                        .foregroundColor(.staticWhite)
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Welcome to Your Dashboard")
+                            .font(.headline)
+                            .foregroundColor(.staticWhite)
+                        Text("See your schedule, streaks, and stats at a glance. Tap to choose which cards appear and in what order.")
+                            .font(.subheadline)
+                            .foregroundColor(.staticWhite.opacity(0.9))
+                    }
+
+                    Spacer(minLength: 24)
+                }
+                .padding()
+                .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.plain)
+
+            VStack {
+                Button(action: {
+                    withAnimation {
+                        hasSeenDashboardHint = true
+                    }
+                }) {
+                    Image(systemName: "xmark")
+                        .font(.body)
+                        .foregroundColor(.staticWhite.opacity(0.8))
+                        .padding(16)
+                }
+                Spacer()
+            }
+        }
+        .background(
+            LinearGradient(
+                gradient: Gradient(colors: [Color.myBlue, Color.myBlue.opacity(0.8)]),
+                startPoint: .leading,
+                endPoint: .trailing
+            )
+        )
+        .cornerRadius(12)
+        .shadow(color: Color.myBlue.opacity(0.3), radius: 8, x: 0, y: 4)
+        .padding(.horizontal)
+        .transition(.move(edge: .top).combined(with: .opacity))
     }
 
     // MARK: - Resume Banner (always pinned above widgets)
@@ -118,6 +190,129 @@ struct DashboardView: View {
         .padding(.horizontal)
         .padding(.top, 8)
         .accessibilityIdentifier(AccessibilityID.dashboardResumeBanner)
+    }
+
+    // MARK: - Today's Workout Card
+
+    private var todaysWorkoutCard: some View {
+        VStack(spacing: 16) {
+            HStack {
+                Image(systemName: "calendar.badge.clock")
+                    .font(.system(size: 32))
+                    .foregroundColor(.myBlue)
+
+                Text("Today's Workout")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundColor(.primary)
+
+                Spacer()
+
+                Button(action: {
+                    appViewModel.navigateTo(.weeklyScheduleView)
+                }) {
+                    Text("Edit")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(.myBlue)
+                }
+                .accessibilityLabel("Edit weekly schedule")
+            }
+
+            if !todaysScheduledWorkouts.isEmpty {
+                VStack(spacing: 8) {
+                    ForEach(todaysScheduledWorkouts) { workout in
+                        scheduledWorkoutRow(workout)
+                    }
+                }
+            } else if hasAnySchedule {
+                VStack(spacing: 8) {
+                    Image(systemName: "moon.zzz.fill")
+                        .font(.system(size: 40))
+                        .foregroundColor(.myBlue.opacity(0.5))
+
+                    Text("Rest day — enjoy your recovery!")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                .padding(.vertical, 12)
+            } else {
+                VStack(spacing: 12) {
+                    Text("Plan which workouts happen on which days")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+
+                    Button(action: {
+                        appViewModel.navigateTo(.weeklyScheduleView)
+                    }) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "calendar.badge.plus")
+                            Text("Set Up Schedule")
+                                .font(.headline)
+                        }
+                        .foregroundColor(.staticWhite)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 10)
+                        .background(Color.myBlue)
+                        .cornerRadius(10)
+                    }
+                    .accessibilityIdentifier(AccessibilityID.dashboardScheduleSetupButton)
+                }
+                .padding(.vertical, 8)
+            }
+        }
+        .padding(20)
+        .background(Color(.secondarySystemGroupedBackground))
+        .cornerRadius(15)
+        .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
+        .padding(.horizontal)
+        .accessibilityIdentifier(AccessibilityID.dashboardTodaysWorkoutCard)
+    }
+
+    @ViewBuilder
+    private func scheduledWorkoutRow(_ workout: WorkoutInfo) -> some View {
+        let isCompleted = completedTodayIds.contains(workout.id)
+        let isActive = workoutController.hasActiveSession && workoutController.activeWorkoutId == workout.id
+        let blockedByOtherSession = workoutController.hasActiveSession && !isActive
+
+        HStack(spacing: 10) {
+            Image(systemName: isCompleted ? "checkmark.circle.fill" : "dumbbell.fill")
+                .font(isCompleted ? .body : .caption)
+                .foregroundColor(isCompleted ? .myGreen : .myBlue)
+
+            Text(workout.name)
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .foregroundColor(.primary)
+                .lineLimit(1)
+
+            Spacer()
+
+            if isCompleted {
+                Text("Done")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.myGreen)
+            } else {
+                Button(action: {
+                    appViewModel.navigateTo(.workoutActiveView(workout.id))
+                }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: isActive ? "figure.run.circle.fill" : "play.circle.fill")
+                        Text(isActive ? "Resume" : "Start")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                    }
+                    .foregroundColor(blockedByOtherSession ? .secondary : (isActive ? .green : .myBlue))
+                }
+                .disabled(blockedByOtherSession)
+            }
+        }
+        .padding(10)
+        .background(Color(.tertiarySystemGroupedBackground))
+        .cornerRadius(10)
     }
 
     // MARK: - This Week Card

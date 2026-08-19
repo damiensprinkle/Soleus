@@ -4,6 +4,25 @@ extension View {
     func hideKeyboard() {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
+
+    /// Standard keyboard accessory: a right-aligned checkmark that dismisses
+    /// the keyboard. Attach exactly once per hosting hierarchy (screen or
+    /// sheet) and keep it unconditional — items added after the keyboard's
+    /// accessory view is built don't render reliably, and multiple keyboard
+    /// toolbar declarations merge unpredictably.
+    func keyboardDismissToolbar() -> some View {
+        toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button(action: { hideKeyboard() }) {
+                    Image(systemName: "checkmark")
+                        .fontWeight(.semibold)
+                }
+                .accessibilityLabel("Done")
+                .accessibilityIdentifier(AccessibilityID.keyboardDoneButton)
+            }
+        }
+    }
 }
 
 func validateAndSetInputFloat(_ input: inout String, for setInputField: inout Float, maxLength: Int = 10, maxDecimals: Int = 2) {
