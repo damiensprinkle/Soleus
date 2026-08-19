@@ -8,6 +8,16 @@ struct ReleaseNotesView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
                     releaseSection(
+                        version: "v1.0.6",
+                        items: [
+                            ("calendar.badge.clock", "Weekly Workout Schedule", "Assign workouts to the days you plan to train from the new calendar icon in the workout tab. Rest days are automatic — any day without a workout assigned."),
+                            ("checkmark.circle.fill", "Today's Workout Widget", "A new dashboard card shows what's scheduled for today with one-tap start/resume, a Done state once you've finished, and a rest-day message when nothing's planned."),
+                            ("flame.fill", "Schedule-Aware Streaks", "Once you've set up a weekly schedule, unscheduled rest days no longer break your streak — only missing a day you actually planned to train does."),
+                            ("figure.flexibility", "New Workout Templates", "Three new built-in templates — Daily Posture & Mobility, Posture Day 1: Upper Back, and Posture Day 2: Rear Chain — each with per-exercise coaching notes."),
+                        ]
+                    )
+
+                    releaseSection(
                         version: "v1.0.5",
                         items: [
                             ("dumbbell.fill", "My Exercises", "A built-in exercise library with 55+ pre-seeded exercises across 9 categories. Browse, search, and pick exercises when building a workout — no more typing names from scratch."),
